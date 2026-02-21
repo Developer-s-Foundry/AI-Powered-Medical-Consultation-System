@@ -1,0 +1,73 @@
+
+> users-profile-service@1.0.0 test:token
+> ts-node src/scripts/generate-test-token.ts
+
+[dotenv@17.3.1] injecting env (15) from .env -- tip: ⚙️  override existing env vars with { override: true }
+
+===========================================
+ TEST JWT TOKENS GENERATOR
+===========================================
+
+ PATIENT TOKEN:
+─────────────────────────────────────────
+User ID: 3128756a-57a6-47d2-a466-1b48ae5858ca
+Email:   patient@test.com
+Role:    patient
+
+Token:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzMTI4NzU2YS01N2E2LTQ3ZDItYTQ2Ni0xYjQ4YWU1ODU4Y2EiLCJlbWFpbCI6InBhdGllbnRAdGVzdC5jb20iLCJyb2xlIjoicGF0aWVudCIsImlhdCI6MTc3MTYzMjU3MiwiZXhwIjoxNzcyMjM3MzcyfQ.GIt7j4uSRDBTwTGt9E5tO8jHoOyMBq-6doyXFeRvOHY
+
+Authorization Header:
+Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzMTI4NzU2YS01N2E2LTQ3ZDItYTQ2Ni0xYjQ4YWU1ODU4Y2EiLCJlbWFpbCI6InBhdGllbnRAdGVzdC5jb20iLCJyb2xlIjoicGF0aWVudCIsImlhdCI6MTc3MTYzMjU3MiwiZXhwIjoxNzcyMjM3MzcyfQ.GIt7j4uSRDBTwTGt9E5tO8jHoOyMBq-6doyXFeRvOHY
+
+
+ DOCTOR TOKEN:
+─────────────────────────────────────────
+User ID: 0b28cf8a-fdfa-4ff2-a430-7773604647ee
+Email:   doctor@test.com
+Role:    doctor
+
+Token:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwYjI4Y2Y4YS1mZGZhLTRmZjItYTQzMC03NzczNjA0NjQ3ZWUiLCJlbWFpbCI6ImRvY3RvckB0ZXN0LmNvbSIsInJvbGUiOiJkb2N0b3IiLCJpYXQiOjE3NzE2MzI1NzIsImV4cCI6MTc3MjIzNzM3Mn0.F9MWs5A_Egn0rkQnD8V7yvanW51FN4yIXLJbHbccqLY
+
+Authorization Header:
+Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwYjI4Y2Y4YS1mZGZhLTRmZjItYTQzMC03NzczNjA0NjQ3ZWUiLCJlbWFpbCI6ImRvY3RvckB0ZXN0LmNvbSIsInJvbGUiOiJkb2N0b3IiLCJpYXQiOjE3NzE2MzI1NzIsImV4cCI6MTc3MjIzNzM3Mn0.F9MWs5A_Egn0rkQnD8V7yvanW51FN4yIXLJbHbccqLY
+
+
+ PHARMACY TOKEN:
+─────────────────────────────────────────
+User ID: 6f97cf23-43fc-41e2-80e2-7e6c6f5db15b
+Email:   pharmacy@test.com
+Role:    pharmacy
+
+Token:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2Zjk3Y2YyMy00M2ZjLTQxZTItODBlMi03ZTZjNmY1ZGIxNWIiLCJlbWFpbCI6InBoYXJtYWN5QHRlc3QuY29tIiwicm9sZSI6InBoYXJtYWN5IiwiaWF0IjoxNzcxNjMyNTcyLCJleHAiOjE3NzIyMzczNzJ9.fPdl0B5vna9QVDW6ZOPbdooaPDsy89vB492yBaOWvMA
+
+Authorization Header:
+Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2Zjk3Y2YyMy00M2ZjLTQxZTItODBlMi03ZTZjNmY1ZGIxNWIiLCJlbWFpbCI6InBoYXJtYWN5QHRlc3QuY29tIiwicm9sZSI6InBoYXJtYWN5IiwiaWF0IjoxNzcxNjMyNTcyLCJleHAiOjE3NzIyMzczNzJ9.fPdl0B5vna9QVDW6ZOPbdooaPDsy89vB492yBaOWvMA
+
+
+ADMIN TOKEN:
+─────────────────────────────────────────
+User ID: 30c74eb2-106f-4f3a-8851-753fc9b6b069
+Email:   admin@test.com
+Role:    admin
+
+Token:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzMGM3NGViMi0xMDZmLTRmM2EtODg1MS03NTNmYzliNmIwNjkiLCJlbWFpbCI6ImFkbWluQHRlc3QuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzcxNjMyNTcyLCJleHAiOjE3NzIyMzczNzJ9.Kqf0Pfg7qs5FqVhJJv3J0imju51QtP5CXSb1TK93Wus
+
+Authorization Header:
+Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzMGM3NGViMi0xMDZmLTRmM2EtODg1MS03NTNmYzliNmIwNjkiLCJlbWFpbCI6ImFkbWluQHRlc3QuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzcxNjMyNTcyLCJleHAiOjE3NzIyMzczNzJ9.Kqf0Pfg7qs5FqVhJJv3J0imju51QtP5CXSb1TK93Wus
+
+
+===========================================
+ USAGE TIPS:
+===========================================
+1. Copy the token for the role you want to test
+2. Use it in the Authorization header:
+   Authorization: Bearer <token>
+3. Tokens expire in 7 days
+4. Run this script again to generate new tokens
+
+===========================================
+
