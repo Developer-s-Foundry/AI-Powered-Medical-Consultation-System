@@ -1,0 +1,76 @@
+version: "3.8"
+
+services:
+  # PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: healthbridge-drugs-db
+    environment:
+      POSTGRES_DB: healthbridge_drugs
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432" # Different port to avoid conflicts
+    volumes:
+      - drugs_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - healthbridge-network
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: healthbridge-rabbitmq-drugs
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    ports:
+      - "5672:5672" # AMQP port
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - healthbridge-network
+
+  # Drugs Service
+  drugs-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: healthbridge-drugs-service
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/healthbridge_drugs
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+      RABBITMQ_EXCHANGE: health-bridge-events
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      CLIENT_URL: http://localhost:3000
+      LOG_LEVEL: info
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - healthbridge-network
+    restart: unless-stopped
+
+volumes:
+  drugs_postgres_data:
+  rabbitmq_data:
+
+networks:
+  healthbridge-network:
+    driver: bridge
