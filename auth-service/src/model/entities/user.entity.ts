@@ -1,9 +1,9 @@
 import { Column, ManyToOne, OneToMany } from "typeorm";
 import { BaseEntity } from "./base";
-import { Role } from "./roles";
-import { ResetPasswordToken } from "./reset-password-token";
-import { RefreshToken } from "./refresh-token";
-import { EmailVerificationToken } from "./email-verification-token";
+import { Role } from "./roles.entity";
+import { ResetPasswordToken } from "./reset-password-token.entity";
+import { RefreshToken } from "./refresh-token.entity";
+import { EmailVerificationToken } from "./email-verification-token.entity";
 
 export class User extends BaseEntity {
     @Column({ unique: true })

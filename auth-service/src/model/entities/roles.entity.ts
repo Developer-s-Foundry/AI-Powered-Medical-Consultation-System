@@ -1,5 +1,5 @@
 import { Column, OneToMany } from "typeorm";
-import { User } from "./user";
+import { User } from "./user.entity";
 
 
 export class Role {

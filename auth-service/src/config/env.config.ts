@@ -18,7 +18,7 @@ export const databaseConfig = {
 }
 
 export const config = {
-    URLPattern: getenv(environment_variables.RABBITMQ_URL),
+    RABBITMQURL: getenv(environment_variables.RABBITMQ_URL),
     EXCHANGE: getenv(environment_variables.RABBITMQ_EXCHANGE),
     ROUTINGKEY: getenv(environment_variables.AUTH_ROUTING_KEY),
     DEFAULTUSER: getenv(environment_variables.RABBITMQ_DEFAULT_USER),

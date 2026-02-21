@@ -1,4 +1,3 @@
-import { EventType } from './../../../notification-service/src/@types/event.types';
 
 
 export enum EventTypes {

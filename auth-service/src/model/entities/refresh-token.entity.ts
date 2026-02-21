@@ -1,5 +1,5 @@
 import { Column, ManyToOne } from "typeorm";
-import { User } from "./user";
+import { User } from "./user.entity";
 
 
 export class RefreshToken {

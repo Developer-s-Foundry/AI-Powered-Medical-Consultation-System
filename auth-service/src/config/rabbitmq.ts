@@ -1,5 +1,6 @@
 import amqp  from 'amqplib';
 import { Logger } from './logger';
+import { config } from './env.config';
 
 export class RabbitMQConfig {
     private connection: amqp.ChannelModel | null = null;
@@ -7,8 +8,8 @@ export class RabbitMQConfig {
     private readonly url: string;
     private logger: Logger;
     
-    constructor(url: string) {
-        this.url = url;
+    constructor() {
+        this.url = config.RABBITMQURL;
         this.logger = Logger.getInstance();
     }
 
