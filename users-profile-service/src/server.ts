@@ -1,6 +1,7 @@
 import app from "./app";
 import { connectDB } from "./config/database";
 import rabbitmqConnection from "./config/rabbitmq";
+import authEventConsumer from "./consumers/authEventConsumer";
 import config from "./config";
 import logger from "./utils/logger";
 
@@ -24,7 +25,11 @@ async function startServer() {
     logger.info(" Connecting to RabbitMQ...");
     await rabbitmqConnection.connect();
 
-    // 3. Start Express server
+    // 2. Start Auth Event Consumer
+    logger.info(" Starting Auth Event Consumer...");
+    await authEventConsumer.start();
+
+    // 4. Start Express server
     const server = app.listen(config.app.port, () => {
       logger.info("");
       logger.info("=================================================");
@@ -69,6 +74,7 @@ function setupGracefulShutdown(server: any) {
 
       try {
         // Close database and message broker connections
+        await authEventConsumer.shutdown();
         await rabbitmqConnection.close();
         logger.info("2/2 RabbitMQ connection closed");
 
