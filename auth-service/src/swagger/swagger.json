@@ -7,6 +7,24 @@
 		"requestBodies": {},
 		"responses": {},
 		"schemas": {
+			"ResponseData": {
+				"properties": {
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {}
+				},
+				"required": [
+					"statusCode",
+					"message"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"User": {
 				"properties": {
 					"id": {
@@ -175,24 +193,6 @@
 				],
 				"type": "object",
 				"additionalProperties": false
-			},
-			"ResponseData": {
-				"properties": {
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {}
-				},
-				"required": [
-					"statusCode",
-					"message"
-				],
-				"type": "object",
-				"additionalProperties": false
 			}
 		},
 		"securitySchemes": {}
@@ -215,7 +215,40 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/User"
+									"properties": {
+										"accessToken": {
+											"type": "string"
+										},
+										"createdAt": {
+											"type": "string",
+											"format": "date-time"
+										},
+										"role": {
+											"type": "string"
+										},
+										"isVerified": {
+											"type": "boolean"
+										},
+										"isActive": {
+											"type": "boolean"
+										},
+										"email": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"accessToken",
+										"createdAt",
+										"role",
+										"isVerified",
+										"isActive",
+										"email",
+										"id"
+									],
+									"type": "object"
 								}
 							}
 						}
@@ -256,7 +289,43 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/User"
+									"properties": {
+										"accessToken": {
+											"type": "string"
+										},
+										"user": {
+											"properties": {
+												"role": {
+													"type": "string"
+												},
+												"isVerified": {
+													"type": "boolean"
+												},
+												"isActive": {
+													"type": "boolean"
+												},
+												"email": {
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"role",
+												"isVerified",
+												"isActive",
+												"email",
+												"id"
+											],
+											"type": "object"
+										}
+									},
+									"required": [
+										"accessToken",
+										"user"
+									],
+									"type": "object"
 								}
 							}
 						}

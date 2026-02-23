@@ -12,6 +12,16 @@ import type { Request as ExRequest, Response as ExResponse, RequestHandler, Rout
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
 const models: TsoaRoute.Models = {
+    "ResponseData": {
+        "dataType": "refObject",
+        "properties": {
+            "statusCode": {"dataType":"double","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"dataType":"any"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "User": {
         "dataType": "refObject",
         "properties": {
@@ -71,16 +81,6 @@ const models: TsoaRoute.Models = {
             "token_hash": {"dataType":"string","required":true},
             "expiresAt": {"dataType":"datetime","required":true},
             "user": {"ref":"User","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ResponseData": {
-        "dataType": "refObject",
-        "properties": {
-            "statusCode": {"dataType":"double","required":true},
-            "message": {"dataType":"string","required":true},
-            "data": {"dataType":"any"},
         },
         "additionalProperties": false,
     },
