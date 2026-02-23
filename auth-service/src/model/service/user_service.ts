@@ -1,5 +1,6 @@
 import { UserRepository } from "../repository/user.repository";
 import EventPublisher from "./EventPublisher";
+import jwt from "jsonwebtoken";
 
 class UserService {
   private userRepository: UserRepository;
@@ -21,11 +22,53 @@ class UserService {
       role: user.role?.name || "patient",
     });
 
-    return user;
+    // Generate token immediately after registration
+    const accessToken = this.generateAccessToken(user);
+
+    //Return user WITHOUT password
+    return {
+      id: user.id,
+      email: user.email,
+      isActive: user.isActive,
+      isVerified: user.isVerified,
+      role: user.role ? user.role.name : "patient",
+      createdAt: user.createdAt,
+      accessToken,
+    };
   }
 
   public async loginUser(email: string, password: string) {
-    return await this.userRepository.loginUser(email, password);
+    const user = await this.userRepository.loginUser(email, password);
+
+    if (!user) {
+      throw new Error("Invalid credentials");
+    }
+
+    const accessToken = this.generateAccessToken(user);
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        isActive: user.isActive,
+        isVerified: user.isVerified,
+        role: user.role ? user.role.name : "patient",
+      },
+      accessToken,
+    };
+  }
+
+  // Generate JWT token
+  private generateAccessToken(user: any): string {
+    return jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+        role: user.role?.name || "patient",
+      },
+      process.env.JWT_SECRET || "your-secret-key",
+      { expiresIn: "7d" },
+    );
   }
 
   public async verifyEmail(email: string, token: string) {
