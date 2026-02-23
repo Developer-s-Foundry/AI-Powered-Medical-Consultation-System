@@ -78,6 +78,12 @@ export class DoctorProfile extends Model<DoctorProfileAttributes> {
   })
   paymentDetails?: any;
 
+  @Column({
+    type: DataType.JSONB,
+    field: "bank_details",
+  })
+  bankDetails?: any;
+
   @CreatedAt
   @Column({
     type: DataType.DATE,

@@ -3,6 +3,9 @@ import doctorService from "../services/DoctorService";
 import { ResponseFormatter } from "../utils/response";
 import { asyncHandler, AppError } from "../utils/errorHandler";
 import logger from "../utils/logger";
+import { BankDetails } from "../@types/doctor.types";
+import { DoctorProfile } from "../models/DoctorProfile";
+import eventPublisher from "../services/EventPublisher";
 
 export class DoctorController {
   /**
@@ -77,6 +80,7 @@ export class DoctorController {
         address: profile.address,
         consultationSchedule: profile.consultationSchedule,
         paymentDetails: profile.paymentDetails,
+        bankDetails: profile.bankDetails,
         createdAt: profile.createdAt,
         updatedAt: profile.updatedAt,
       }),
@@ -289,6 +293,30 @@ export class DoctorController {
   });
 
   /**
+   * Get bank details
+   * GET /api/doctors/bank-details
+   */
+  getBankDetails = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      throw new AppError("User not authenticated", 401);
+    }
+
+    const profile = await doctorService.getProfile(userId);
+
+    if (!profile) {
+      throw new AppError("Doctor profile not found", 404);
+    }
+
+    res.json(
+      ResponseFormatter.success({
+        bankDetails: profile.bankDetails || null,
+      }),
+    );
+  });
+
+  /**
    * Update Stripe account
    * PUT /api/doctors/payment/stripe
    */
@@ -316,6 +344,35 @@ export class DoctorController {
       ),
     );
   });
+
+  /**
+   * Get doctor bank details by userId (For Payment Service)
+   * GET /api/doctors/:userId/bank-details
+   * * PUBLIC - No auth required (internal service call)
+   */
+  getDoctorBankDetails = asyncHandler(
+    async (req: Request<{ userId: string }>, res: Response) => {
+      const { userId } = req.params;
+
+      const profile = await doctorService.getProfile(userId);
+
+      if (!profile) {
+        throw new AppError("Doctor profile not found", 404);
+      }
+
+      if (!profile.bankDetails) {
+        throw new AppError("Bank details not configured for this doctor", 404);
+      }
+
+      res.json(
+        ResponseFormatter.success({
+          userId: profile.userId,
+          doctorName: `${profile.firstName} ${profile.lastName}`,
+          bankDetails: profile.bankDetails,
+        }),
+      );
+    },
+  );
 
   /**
    * Update consultation fees
@@ -480,6 +537,146 @@ export class DoctorController {
       );
     },
   );
+
+  /**
+   * Update bank details (WITH ENCRYPTION)
+   */
+  async updateBankDetails(
+    userId: string,
+    bankDetails: BankDetails,
+  ): Promise<DoctorProfile | null> {
+    try {
+      const profile = await DoctorProfile.findByPk(userId);
+
+      if (!profile) {
+        logger.warn(`Doctor profile not found: userId=${userId}`);
+        return null;
+      }
+
+      // Encrypt before saving
+      const encryptionService = (await import("../utils/encryption")).default;
+      const encrypted = encryptionService.encryptBankDetails(bankDetails);
+
+      await profile.update({ bankDetails: encrypted });
+
+      logger.info(`Bank details updated (encrypted) for doctor: ${userId}`);
+
+      // Publish event
+      await eventPublisher.publishDoctorBankUpdated({
+        userId,
+        bankDetails: {
+          businessName: bankDetails.businessName,
+          bankCode: bankDetails.bankCode,
+          accountNumber: "******" + bankDetails.accountNumber.slice(-4), // Masked
+          accountName: bankDetails.accountName,
+          isVerified: bankDetails.isVerified || false,
+        },
+      });
+
+      return profile;
+    } catch (error) {
+      logger.error("Error updating bank details:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get doctor profile (WITH BANK DETAILS DECRYPTION)
+   */
+  async getProfileWithBankDetails(
+    userId: string,
+  ): Promise<DoctorProfile | null> {
+    try {
+      const profile = await DoctorProfile.findByPk(userId);
+
+      if (!profile) return null;
+
+      // Decrypt bank details if they exist
+      if (profile.bankDetails) {
+        const encryptionService = (await import("../utils/encryption")).default;
+        (profile as any).bankDetails = encryptionService.decryptBankDetails(
+          profile.bankDetails as any,
+        );
+      }
+
+      return profile;
+    } catch (error) {
+      logger.error("Error fetching doctor profile with bank details:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Verify bank account
+   */
+  async verifyBankAccount(
+    userId: string,
+    accountNumber: string,
+    bankCode: string,
+  ): Promise<any> {
+    try {
+      const axios = (await import("axios")).default;
+
+      // Call Paystack to verify
+      const response = await axios.get(
+        `https://api.paystack.co/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          },
+        },
+      );
+
+      if (response.data.status) {
+        const accountName = response.data.data.account_name;
+
+        const profile = await DoctorProfile.findByPk(userId);
+        if (profile) {
+          const bankDetails: BankDetails = {
+            businessName:
+              (profile.bankDetails as any)?.businessName ||
+              `${profile.firstName} ${profile.lastName}`,
+            bankCode,
+            accountNumber,
+            accountName,
+            isVerified: true,
+            verifiedAt: new Date(),
+          };
+
+          // Encrypt before saving
+          const encryptionService = (await import("../utils/encryption"))
+            .default;
+          const encrypted = encryptionService.encryptBankDetails(bankDetails);
+
+          await profile.update({ bankDetails: encrypted });
+
+          logger.info(
+            `Bank account verified and encrypted for doctor: ${userId}`,
+          );
+
+          // Publish event
+          await eventPublisher.publishDoctorBankVerified({
+            userId,
+            accountNumber: "******" + accountNumber.slice(-4), // Masked
+            accountName,
+            bankCode,
+          });
+
+          return {
+            accountNumber: "******" + accountNumber.slice(-4),
+            accountName,
+            bankCode,
+            isVerified: true,
+          };
+        }
+      }
+
+      throw new Error("Bank account verification failed");
+    } catch (error) {
+      logger.error("Error verifying bank account:", error);
+      throw error;
+    }
+  }
 }
 
 export default new DoctorController();

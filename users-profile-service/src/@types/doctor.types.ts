@@ -45,6 +45,15 @@ export interface PaymentDetails {
   stripe: StripeDetails;
 }
 
+export interface BankDetails {
+  businessName: string;
+  bankCode: string;
+  accountNumber: string;
+  accountName?: string;
+  isVerified?: boolean;
+  verifiedAt?: Date;
+}
+
 export interface DoctorProfileAttributes {
   userId: string;
   firstName: string;
@@ -56,6 +65,7 @@ export interface DoctorProfileAttributes {
   address?: Address;
   consultationSchedule?: ConsultationSchedule;
   paymentDetails?: PaymentDetails;
+  bankDetails?: BankDetails;
   createdAt?: Date;
   updatedAt?: Date;
 }

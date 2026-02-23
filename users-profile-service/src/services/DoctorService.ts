@@ -1,7 +1,9 @@
 import { DoctorProfile } from "../models/DoctorProfile";
-import { DoctorProfileAttributes } from "../@types/doctor.types";
+import { DoctorProfileAttributes, BankDetails } from "../@types/doctor.types";
 import logger from "../utils/logger";
 import eventPublisher from "./EventPublisher";
+import encryptionService from "../utils/encryption";
+import axios from "axios";
 
 export class DoctorService {
   /**
@@ -421,6 +423,145 @@ export class DoctorService {
       return availableDoctors;
     } catch (error) {
       logger.error("Error fetching doctors by day:", error);
+      throw error;
+    }
+  }
+  /**
+   * Update bank details (WITH ENCRYPTION)
+   */
+  async updateBankDetails(
+    userId: string,
+    bankDetails: BankDetails,
+  ): Promise<DoctorProfile | null> {
+    try {
+      const profile = await DoctorProfile.findByPk(userId);
+      if (!profile) return null;
+
+      // ✅ ENCRYPT SENSITIVE DATA BEFORE SAVING
+      const encryptedBankDetails = encryptionService.encryptBankDetails({
+        businessName: bankDetails.businessName,
+        bankCode: bankDetails.bankCode,
+        accountNumber: bankDetails.accountNumber,
+        accountName: bankDetails.accountName,
+        isVerified: bankDetails.isVerified || false,
+        verifiedAt: bankDetails.verifiedAt,
+      });
+
+      await profile.update({ bankDetails: encryptedBankDetails });
+
+      logger.info(`Bank details updated (encrypted) for doctor: ${userId}`);
+
+      // Publish event with MASKED account number (for security)
+      await eventPublisher.publishDoctorBankUpdated({
+        userId,
+        bankDetails: {
+          businessName: bankDetails.businessName,
+          bankCode: bankDetails.bankCode,
+          accountNumber: encryptionService.maskAccountNumber(
+            bankDetails.accountNumber,
+          ), // MASKED
+          accountName: bankDetails.accountName,
+          isVerified: bankDetails.isVerified || false,
+        },
+      });
+
+      return profile;
+    } catch (error) {
+      logger.error("Error updating bank details:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get doctor profile (WITH DECRYPTION)
+   */
+  async getDoctorProfile(userId: string): Promise<DoctorProfile | null> {
+    try {
+      const profile = await DoctorProfile.findByPk(userId);
+
+      if (!profile) return null;
+
+      // ✅ DECRYPT BANK DETAILS WHEN RETRIEVING
+      if (profile.bankDetails) {
+        const decryptedBankDetails = encryptionService.decryptBankDetails(
+          profile.bankDetails as any,
+        );
+
+        // Replace with decrypted version
+        (profile as any).bankDetails = decryptedBankDetails;
+      }
+
+      return profile;
+    } catch (error) {
+      logger.error("Error fetching doctor profile:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Verify bank account (WITH ENCRYPTION)
+   */
+  async verifyBankAccount(
+    userId: string,
+    accountNumber: string,
+    bankCode: string,
+  ): Promise<any> {
+    try {
+      // Call Paystack to verify (use plain account number)
+      const response = await axios.get(
+        `https://api.paystack.co/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          },
+        },
+      );
+
+      if (response.data.status) {
+        const accountName = response.data.data.account_name;
+
+        const profile = await DoctorProfile.findByPk(userId);
+        if (profile) {
+          const bankDetails: BankDetails = {
+            businessName:
+              profile.bankDetails?.businessName ||
+              `${profile.firstName} ${profile.lastName}`,
+            bankCode,
+            accountNumber,
+            accountName,
+            isVerified: true,
+            verifiedAt: new Date(),
+          };
+
+          // ✅ ENCRYPT BEFORE SAVING
+          const encryptedBankDetails =
+            encryptionService.encryptBankDetails(bankDetails);
+          await profile.update({ bankDetails: encryptedBankDetails });
+
+          logger.info(
+            `Bank account verified and encrypted for doctor: ${userId}`,
+          );
+
+          // Publish event with MASKED data
+          await eventPublisher.publishDoctorBankVerified({
+            userId,
+            accountNumber: encryptionService.maskAccountNumber(accountNumber), // MASKED
+            accountName,
+            bankCode,
+          });
+
+          return {
+            accountNumber: encryptionService.maskAccountNumber(accountNumber), // Return masked
+            accountName,
+            bankCode,
+            isVerified: true,
+          };
+        }
+      }
+
+      throw new Error("Bank account verification failed");
+    } catch (error) {
+      logger.error("Error verifying bank account:", error);
       throw error;
     }
   }
