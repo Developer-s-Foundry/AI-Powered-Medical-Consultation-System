@@ -1,52 +1,65 @@
-import winston from 'winston';
+import winston from "winston";
 
+export class Logger {
+  private static instance: Logger;
+  private logger: winston.Logger;
 
-export class Logger extends winston.Logger {
-    private static instance: Logger;
-    private logger: winston.Logger;
-
-    private constructor() {
-      super();
-        this.logger = winston.createLogger({
-              level: 'info',
-              format: winston.format.json(),
-              defaultMeta: { service: 'auth-service' },
-              transports: [
-                //
-                // - Write all logs with importance level of `error` or higher to `error.log`
-                //   (i.e., error, fatal, but not other levels)
-                //
-                new winston.transports.File({ filename: 'error.log', level: 'error', format: winston.format.combine(
-                    winston.format.timestamp(),
-                    winston.format.json()
-                )}),
-                //
-                // - Write all logs with importance level of `info` or higher to `app.log`
-                new winston.transports.File({ filename: 'app.log' , level: 'info' , format: winston.format.combine(
-                    winston.format.timestamp(),
-                    winston.format.json()
-                )}),
-              ],
-            });
-    }
-
-    public static getInstance(): Logger {
-        if (!Logger.instance) {
-            Logger.instance = new Logger();
-        }
-        return Logger.instance;
-    }
-
-    //
-// If we're not in production then log to the `console` with the format:
-// `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
-//
-    public logToConsole() {
-        if (process.env.NODE_ENV !== 'production') {
-            this.logger.add(new winston.transports.Console({
-                format: winston.format.simple(),
-            }));
-        }
+  private constructor() {
+    this.logger = winston.createLogger({
+      level: "info",
+      format: winston.format.json(),
+      defaultMeta: { service: "auth-service" },
+      transports: [
+        new winston.transports.File({
+          filename: "error.log",
+          level: "error",
+          format: winston.format.combine(
+            winston.format.timestamp(),
+            winston.format.json(),
+          ),
+        }),
+        new winston.transports.File({
+          filename: "app.log",
+          level: "info",
+          format: winston.format.combine(
+            winston.format.timestamp(),
+            winston.format.json(),
+          ),
+        }),
+      ],
+    });
   }
 
+  public static getInstance(): Logger {
+    if (!Logger.instance) {
+      Logger.instance = new Logger();
+    }
+    return Logger.instance;
+  }
+
+  public logToConsole() {
+    if (process.env.NODE_ENV !== "production") {
+      this.logger.add(
+        new winston.transports.Console({
+          format: winston.format.simple(),
+        }),
+      );
+    }
+  }
+
+  public info(message: string, ...meta: any[]) {
+    this.logger.info(message, ...meta);
+  }
+
+  public error(message: string, ...meta: any[]) {
+    this.logger.error(message, ...meta);
+  }
+
+  public warn(message: string, ...meta: any[]) {
+    this.logger.warn(message, ...meta);
+  }
+
+  public debug(message: string, ...meta: any[]) {
+    this.logger.debug(message, ...meta);
+  }
 }

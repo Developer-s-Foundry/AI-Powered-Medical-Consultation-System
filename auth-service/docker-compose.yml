@@ -1,45 +1,39 @@
 services:
-
   auth-service-app:
     build:
       context: .
       dockerfile: dockerfile
-      target: production
     container_name: auth-service
     ports:
-      - '${SERVER_PORT:-3001}:3000'
+      - "${SERVER_PORT:-3001}:3000"
     environment:
-      NODE_ENV: production
-      DB_PORT: '${DB_PORT:-5432}'
-      DB_HOST: '${DB_HOST:-postgres-db}'
-      DB_USERNAME: '${DB_USERNAME}'
-      DB_PASSWORD: '${DB_PASSWORD}'
-      DB_NAME: '${DB_NAME}'
+      NODE_ENV: development
+      DB_PORT: "${DB_PORT:-5436}"
+      DB_HOST: "${DB_HOST:-postgres-db}"
+      DB_USERNAME: "${DB_USERNAME}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      DB_NAME: "${DB_NAME}"
     depends_on:
       postgres-db:
         condition: service_healthy
     restart: unless-stopped
     networks:
       - authservice-network
-    
-  # ========================================
-  # PostgreSQL Database Service
-  # ========================================
 
   postgres-db:
     image: postgres:15-alpine
     container_name: auth-service-db
     environment:
-      DB_USERNAME: '${DB_USERNAME}'
-      DB_PASSWORD: '${DB_PASSWORD}'
-      DB_NAME: '${DB_NAME}'
+      POSTGRES_USER: "${DB_USERNAME}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_DB: "${DB_NAME}"
     volumes:
       - postgres_data:/var/lib/postgresql
     ports:
-      - '${DB_PORT:-5432}:5432'
+      - "${DB_PORT:-5436}:5432"
     restart: unless-stopped
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME} -d ${DB_NAME}']
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -47,65 +41,49 @@ services:
     networks:
       - authservice-network
 
-  # ========================================
-  # Redis Data Service
-  # ========================================
   redis:
     image: redis:alpine
     container_name: auth-service-redis
     volumes:
       - redis_data:/data
     ports:
-      - '6379:6379'
+      - "6379:6379"
     restart: unless-stopped
     networks:
       - authservice-network
 
+  rabbitmq:
+    image: rabbitmq:4.2.4-management-alpine
+    container_name: auth-service-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_DEFAULT_USER}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_DEFAULT_PASS}"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - authservice-network
 
-# ========================================
-# Rabbitmq Configuration
-# ========================================
-Rabbitmq:
-  image: rabbitmq:4.2.4-management-alpine
-  container_name: auth-service-rabbitmq
-  environment:
-    RABBITMQ_DEFAULT_USER: '${RABBITMQ_DEFAULT_USER}'
-    RABBITMQ_DEFAULT_PASS: '${RABBITMQ_DEFAULT_PASS}'
-  ports:
-    - '5672:5672' # RabbitMQ default port
-    - '15672:15672' # RabbitMQ management UI port
-  volumes:
-    - rabbitmq_data:/var/lib/rabbitmq
-
-  healthcheck:
-    test: ["CMD", "rabbitmqctl", "status"]
-    interval: 30s
-    timeout: 10s
-    retries: 5
-    start_period: 30s
-  restart: unless-stopped
-  networks:
-    - authservice-network 
-
-
-
-
-
-# ========================================
-# Volume Configuration
-# ========================================
 volumes:
   postgres_data:
     name: authservice-postgres-data
     driver: local
-
   redis_data:
     name: authservice-redis-data
     driver: local
+  rabbitmq_data:
+    name: authservice-rabbitmq-data
+    driver: local
 
-# ========================================
-# Network Configuration
-# ========================================
 networks:
   authservice-network:
     name: authservice-network
