@@ -6,10 +6,10 @@ export interface ResponseData {
 
 export interface PaymentType {
     booking_id: string;
-    user_id: string;
+    patient_id: string;
     amount: number;
     provider_name: string;
-    email: string;
+    patient_email: string;
 }
 
 export interface DoctorsPaymentData {

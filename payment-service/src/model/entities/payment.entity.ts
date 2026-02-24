@@ -14,6 +14,9 @@ import { Transaction } from "./transaction.entity";
     @Column()
     patient_id!: string
 
+     @Column()
+    patient_email!: string
+
     @Column()
     payment_reference_id!: string
 

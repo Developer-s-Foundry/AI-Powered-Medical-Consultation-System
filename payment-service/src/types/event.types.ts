@@ -1,8 +1,8 @@
 
-
-export enum EventTypes {
-    email_verification = 'email_verification',
-    password_reset = 'password_reset',
+export enum EventType {
+    PAYMENT_SUCCESS = 'payment_success',
+    PAYMENT_FAILED = 'payment_failed',
+    CREATE_APPOINTMENT = 'create_appointment'
 }
 
 export enum RecipientType {
@@ -10,13 +10,38 @@ export enum RecipientType {
     doctor = 'doctor'
 }
 
-export interface EventData {
-    eventType:EventTypes
-    recipientId: string;
-    recipientType: RecipientType;
-    referenceType: string;
-    referenceId: string;
-    email: string;
-    verificationToken?: string;
-    resetToken?: string;
+// Payment Events
+export interface PaymentSuccessEvent {
+  eventType: EventType.PAYMENT_SUCCESS;
+  payload: {
+    transactionId: string;
+    bookingId: string;
+    patientId: string;
+    patientEmail: string;
+    patientPhone?: string;
+    amount: number;
+    currency: string;
+    transactionReference: string;
+    paymentDate: string;
+  };
+}
+
+export interface PaymentFailedEvent {
+  eventType: EventType.PAYMENT_FAILED;
+  payload: {
+    transactionId: string;
+    bookingId: string;
+    patientId: string;
+    patientEmail: string;
+    amount: number;
+    reason: string;
+  };
+}
+
+export interface AppointmentCreatedEvent {
+  eventType: EventType.CREATE_APPOINTMENT;
+  payload: {
+    bookingId: string;
+    patientId: string;
+  };
 }

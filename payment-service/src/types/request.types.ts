@@ -13,12 +13,8 @@ export interface IPaymentRepository {
 
     createTransaction(transactionData: Partial<Transaction>): Promise<Transaction>
 
-    getTransactionById(transactionId: string): Promise<Transaction | null>
-
     createWebhookEvent(eventData: Partial<WebhookEvent>): Promise<WebhookEvent>
 
-    getWebhookEventById(eventId: string): Promise<WebhookEvent | null>
-    
     getPaymentByReferenceId(paymentReferenceId: string):Promise<Payment>
         
 }
