@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { IPaymentRepository } from "../../types/repository.types";
+import { IPaymentRepository } from "../../types/request.types";
 import { Payment } from "../entities/payment.entity";
 import { Provider } from "../entities/provider.entity";
 import { Transaction } from "../entities/transaction.entity";
@@ -22,7 +22,7 @@ export class PaymentRepository implements IPaymentRepository {
         const provider = await this.providerRepository.save({ provider_name: paymentData.provider_name, is_active: true });
         const payment = this.paymentRepository.create(paymentData);
         const reference_id = `PAY-${payment.id}-${Date.now()}`;
-        const idempotency_key = `idempotency-${paymentData.user_id}-${payment.id}-${Date.now()}`;
+        const idempotency_key = `idempotency-${paymentData.patient_id}-${payment.id}-${Date.now()}`;
         payment.idempotency_key = idempotency_key;
         payment.payment_reference_id = reference_id;
         payment.provider = provider;

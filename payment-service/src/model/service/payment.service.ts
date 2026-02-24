@@ -1,5 +1,3 @@
-import { ReferenceType } from './../../../../notification-service/src/@types/notification.types';
-import { WebhookEvent } from './../entities/webhook.events.entity';
 import { PaymentRepository } from "../repository/payment.repository";
 import { Payment } from "../entities/payment.entity";
 import { PaymentType } from "../../types/entity.types";
@@ -10,16 +8,20 @@ import crypto from "crypto";
 import { paymentQueue } from "../../queues/payment_queue";
 import { BaseResponse } from "../../utils/reusable.func";
 import { payment_status } from '../../types/enum.types';
+import Producer from "../../producer/producer";
+import { RabbitMQConfig } from "../../config/rabbitmq";
+import { EventType } from "../../types/event.types";
 
 
 
 export class PaymentService {
 
     private paymentRepository: PaymentRepository;
+    private producer: Producer;
 
     constructor() {
         this.paymentRepository = new PaymentRepository();
-
+        this.producer =  new Producer(new RabbitMQConfig())
     }
 
     async createPayment(paymentData: PaymentType) :Promise<{access_code: string}> {
@@ -32,7 +34,7 @@ export class PaymentService {
 
     
         // initiate payment process
-        return await this.initiatePayment(payment.payment_reference_id, paymentData.email,paymentData.amount, subaccount_code); 
+        return await this.initiatePayment(payment.payment_reference_id, paymentData.patient_email,paymentData.amount, subaccount_code); 
       
     }
     private async createSubaccount(doctorPaymentData: DoctorsPaymentData): Promise<string> {
@@ -126,23 +128,60 @@ export class PaymentService {
             processed: true
         });
         // create transaction
-        await this.paymentRepository.createTransaction({
+        const transaction = await this.paymentRepository.createTransaction({
             payment_reference_id: webhookData.data.reference,
             amount: webhookData.data.amount,
             status: webhookData.data.status === 'success' ? payment_status.COMPLETED : payment_status.FAILED,
             response_payload: webhookData.data
         });
+          const payment = await this.paymentRepository.getPaymentByReferenceId(webhookData.data.reference);
         // if transaction is successful, update payment service
         if (webhookData.data.status === 'success') {
-            const payment = await this.paymentRepository.getPaymentByReferenceId(webhookData.data.reference);
             await this.paymentRepository.updatePayment(payment.id, {status: payment_status.COMPLETED})
             // send payment success event to notification service and ai service(to create appointment)
+            await this.producer.sendToQueue(EventType.PAYMENT_SUCCESS, {
+                    transactionId: transaction.id,
+                    bookingId: payment.booking_id,
+                    patientId: payment.patient_id,
+                    patientEmail: payment.patient_email,
+                    amount: payment.amount,
+                    currency: payment.currency,
+                    transactionReference: payment.payment_reference_id,
+                    paymentDate: payment.createdAt
+             })
+             await this.producer.sendToQueue(EventType.CREATE_APPOINTMENT, {
+                    bookingId: payment.booking_id,
+                    patientId: payment.patient_id,
+             })
             
         }else {
             // send payment success event to notification service
+            await this.producer.sendToQueue(EventType.PAYMENT_FAILED, {
+                    transactionId: transaction.id,
+                    bookingId: payment.booking_id,
+                    patientId: payment.patient_id,
+                    patientEmail: payment.patient_email,
+                    amount: payment.amount,
+                    reason: 'failed to charge patient'
+             })
         }
-      
         
+    }
+
+    async getPatientProfileData(patientId: string): Promise<{patientPhone: string}> {
+        const response = await fetch(`http://profile/doctors/${patientId}/payment-data`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        if (!response.ok) {
+            throw new AppError(`Failed to fetch doctor's payment data: ${response.statusText}`, response.status);
+        }
+        const data =  await response.json();
+        return {
+            patientPhone: data.phone, 
+        }
     }
 }
 
