@@ -4,6 +4,7 @@ import AppDataSource from './config/database';
 import { Logger } from './config/logger';
 import { Response as ExResponse, Request as ExRequest } from "express";
 import swaggerUi from "swagger-ui-express";
+import  { RegisterRoutes } from './swagger/routes'
 
 
 
@@ -17,7 +18,8 @@ import swaggerUi from "swagger-ui-express";
     const port = process.env.PORT;
     const app: express.Application = express();
     app.use(express.json());
-        // Swagger setup
+    RegisterRoutes(app);
+        // Swagger ui setup
     app.use("/api", swaggerUi.serve, async (_req: ExRequest, res: ExResponse) => {
         return res.send(
             swaggerUi.generateHTML(await import("./swagger/swagger.json"))
