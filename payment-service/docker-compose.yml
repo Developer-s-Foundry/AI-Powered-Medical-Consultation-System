@@ -15,9 +15,16 @@ services:
       DB_USERNAME: '${DB_USERNAME}'
       DB_PASSWORD: '${DB_PASSWORD}'
       DB_NAME: '${DB_NAME}'
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT:-6379}:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DB: ${REDIS_DB:-0}
+      
     depends_on:
       postgres-db:
         condition: service_healthy
+      redis:
+        condition: service_healthy  # wait for redis to be ready
     restart: unless-stopped
     networks:
       - payment-service-network
@@ -51,15 +58,17 @@ services:
   # Redis Data Service
   # ========================================
   redis:
-    image: redis:alpine
-    container_name: auth-service-redis
-    volumes:
-      - redis_data:/data
+    image: redis:7-alpine
     ports:
-      - '6379:6379'
-    restart: unless-stopped
-    networks:
-      - payment-service-network
+      - '6379:6379'                 # expose to host for local debugging
+    command: redis-server --requirepass yourpassword
+    volumes:
+      - redis_data:/data            # persist data across restarts
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', 'yourpassword', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 
 # ========================================

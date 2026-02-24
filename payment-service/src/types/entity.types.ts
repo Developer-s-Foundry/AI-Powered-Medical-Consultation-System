@@ -11,3 +11,9 @@ export interface PaymentType {
     provider_name: string;
     email: string;
 }
+
+export interface DoctorsPaymentData {
+    business_name: string;
+    bank_code: string;
+    account_number: string;
+}

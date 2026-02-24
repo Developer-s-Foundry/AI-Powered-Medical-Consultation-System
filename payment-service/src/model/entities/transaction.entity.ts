@@ -1,15 +1,10 @@
-import {Entity, Column} from "typeorm";
+import {Entity, Column, ManyToOne, JoinColumn} from "typeorm";
 import { BaseEntity } from "./base";
 import { payment_status } from "../../types/enum.types";
+import { Payment } from "./payment.entity";
 
 @Entity("transaction")
 export class Transaction extends BaseEntity {
-
-    @Column()
-    booking_id!: string
-
-    @Column()
-    payment_id!: string
 
     @Column()
     payment_reference_id!: string  
@@ -23,4 +18,6 @@ export class Transaction extends BaseEntity {
     @Column({type: "jsonb"})
     response_payload!: any
 
+    @ManyToOne(() => Payment, (payment) => payment.transactions)
+    payment!: Payment
 }

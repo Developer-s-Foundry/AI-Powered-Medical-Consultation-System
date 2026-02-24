@@ -1,7 +1,8 @@
-import {Column, Entity, ManyToMany, ManyToOne } from "typeorm";
+import {Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany } from "typeorm";
 import { payment_status } from "../../types/enum.types";
 import { BaseEntity } from "./base";
 import { Provider } from "./provider.entity";
+import { Transaction } from "./transaction.entity";
 
 
 @Entity()
@@ -11,7 +12,7 @@ import { Provider } from "./provider.entity";
     booking_id!: string
 
     @Column()
-    user_id!: string
+    patient_id!: string
 
     @Column()
     payment_reference_id!: string
@@ -44,4 +45,8 @@ import { Provider } from "./provider.entity";
 
     @ManyToOne(() => Provider, provider => provider.payments)
     provider!: Provider
+
+    @OneToMany(() => Transaction, transaction => transaction.payment)
+    @JoinColumn()
+    transactions!: Transaction[]
 }

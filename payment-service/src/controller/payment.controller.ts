@@ -1,9 +1,8 @@
 import { PaymentService } from "../model/service/payment.service";
-import { Controller, Get, Post, Route, Path, Body} from "tsoa";
+import { Controller, Get, Post, Route, Path, Body, Header} from "tsoa";
 import { PaymentType } from "../types/entity.types";
 import { Payment } from "../model/entities/payment.entity";
 import { AppError } from "../utils/error";
-
 
 
 @Route("payments")
@@ -35,9 +34,10 @@ export class PaymentController extends Controller {
 
     @Post("/webhook/paystack")
     public async handlePaystackWebhook(
+        @Header("x-paystack-signature") signature: string,
         @Body() webhookData: any
     ): Promise<void> {
-        await this.paymentService.handlePaystackWebhook(webhookData);
+        await this.paymentService.handlePaystackWebhook(signature, webhookData);
     }
 }
         
