@@ -24,7 +24,7 @@ process.on("unhandledRejection", (reason) => {
   const rabbitMQ = new RabbitMQConfig();
   console.log("2. Logger and RabbitMQ config created");
 
-  const port = process.env.PORT || 3001;
+  const port = process.env.PORT || 3004;
   const app: express.Application = express();
   app.use(express.json());
   console.log("3. Express setup done");
