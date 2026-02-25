@@ -1,0 +1,121 @@
+services:
+
+  auth-service-app:
+    build:
+      context: .
+      dockerfile: dockerfile
+      target: production
+    container_name: payment-service
+    ports:
+      - '${SERVER_PORT:-3001}:3000'
+    environment:
+      NODE_ENV: production
+      DB_PORT: '${DB_PORT:-5432}'
+      DB_HOST: '${DB_HOST:-postgres-db}'
+      DB_USERNAME: '${DB_USERNAME}'
+      DB_PASSWORD: '${DB_PASSWORD}'
+      DB_NAME: '${DB_NAME}'
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT:-6379}:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DB: ${REDIS_DB:-0}
+      
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy  # wait for redis to be ready
+    restart: unless-stopped
+    networks:
+      - payment-service-network
+    
+  # ========================================
+  # PostgreSQL Database Service
+  # ========================================
+
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: auth-service-db
+    environment:
+      DB_USERNAME: '${DB_USERNAME}'
+      DB_PASSWORD: '${DB_PASSWORD}'
+      DB_NAME: '${DB_NAME}'
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME} -d ${DB_NAME}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - payment-service-network
+
+  # ========================================
+  # Redis Data Service
+  # ========================================
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'                 # expose to host for local debugging
+    command: redis-server --requirepass yourpassword
+    volumes:
+      - redis_data:/data            # persist data across restarts
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', 'yourpassword', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+
+# ========================================
+# Rabbitmq Configuration
+# ========================================
+Rabbitmq:
+  image: rabbitmq:4.2.4-management-alpine
+  container_name: auth-service-rabbitmq
+  environment:
+    RABBITMQ_DEFAULT_USER: '${RABBITMQ_DEFAULT_USER}'
+    RABBITMQ_DEFAULT_PASS: '${RABBITMQ_DEFAULT_PASS}'
+  ports:
+    - '5672:5672' # RabbitMQ default port
+    - '15672:15672' # RabbitMQ management UI port
+  volumes:
+    - rabbitmq_data:/var/lib/rabbitmq
+
+  healthcheck:
+    test: ["CMD", "rabbitmqctl", "status"]
+    interval: 30s
+    timeout: 10s
+    retries: 5
+    start_period: 30s
+  restart: unless-stopped
+  networks:
+    - payment-service-network 
+
+
+
+
+
+# ========================================
+# Volume Configuration
+# ========================================
+volumes:
+  postgres_data:
+    name: authservice-postgres-data
+    driver: local
+
+  redis_data:
+    name: authservice-redis-data
+    driver: local
+
+# ========================================
+# Network Configuration
+# ========================================
+networks:
+  authservice-network:
+    name: authservice-network
+    driver: bridge

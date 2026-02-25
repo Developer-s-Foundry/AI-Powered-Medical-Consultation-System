@@ -1,0 +1,54 @@
+{
+  "name": "auth-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "tsoa:routes": "tsoa routes",
+    "tsoa:spec": "tsoa spec",
+    "start": "node ./build/server.js",
+    "build": "tsoa spec-and-routes && tsc",
+    "typeorm": "ts-node ./node_modules/typeorm/cli.js",
+    "migration:generate": "npm run typeorm migration:generate -- -d ./src/config/database.ts ./src/migrations/$(date +%Y%m%d%H%M%S)-migration",
+    "migration:run": "npm run typeorm migration:run -- -d ./src/config/database.ts",
+    "dev": "rimraf ./src/swagger && tsoa spec-and-routes && ts-node src/server.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Developer-s-Foundry/AI-Powered-Medical-Consultation.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Developer-s-Foundry/AI-Powered-Medical-Consultation/issues"
+  },
+  "homepage": "https://github.com/Developer-s-Foundry/AI-Powered-Medical-Consultation#readme",
+  "dependencies": {
+    "amqplib": "^0.10.9",
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.18.0",
+    "reflect-metadata": "^0.2.2",
+    "swagger-ui-express": "^5.0.1",
+    "typeorm": "^0.3.28",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.8",
+    "@types/bcrypt": "^6.0.0",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^25.3.0",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@types/typescript": "^0.4.29",
+    "nodemon": "^3.1.14",
+    "rimraf": "^6.1.3",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "tsoa": "^7.0.0-alpha.0",
+    "typescript": "^5.9.3"
+  }
+}
