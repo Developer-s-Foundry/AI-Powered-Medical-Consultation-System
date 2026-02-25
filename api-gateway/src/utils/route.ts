@@ -9,7 +9,7 @@ export const routingParts = [
 
 export const authPublicRoutes = [
   "/api/v1/auth/user/login",
-  "/api/v1/auth/user/create",
+  "/api/v1/auth/user/register",
   "/api/v1/auth/user/reset-password",
   "/api/v1/auth/user/forgot-password",
 ];
