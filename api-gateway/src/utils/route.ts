@@ -8,8 +8,8 @@ export const routingParts = [
 ];
 
 export const authPublicRoutes = [
-  "/api/v1/auth/user/login",
-  "/api/v1/auth/user/register",
-  "/api/v1/auth/user/reset-password",
-  "/api/v1/auth/user/forgot-password",
+  "/api/v1/auth/users/login",
+  "/api/v1/auth/users/register",
+  "/api/v1/auth/users/reset-password",
+  "/api/v1/auth/users/forgot-password",
 ];
