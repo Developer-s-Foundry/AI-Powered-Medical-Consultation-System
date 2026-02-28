@@ -12,18 +12,39 @@ export class UserController extends Controller {
 
   @Post("/register")
   public async createUser(
-    @Body() requestBody: { email: string; password: string },
+    @Body() requestBody: { email: string; password: string; role: string },
   ) {
-    const { email, password } = requestBody;
-    return await this.userService.createUser(email, password);
+    const { email, password, role } = requestBody;
+
+    // 1. Create the user
+    const user = await this.userService.createUser(email, password, role);
+
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      accessToken: user.accessToken,
+    };
   }
 
   @Post("/login")
   public async loginUser(
     @Body() requestBody: { email: string; password: string },
   ) {
+    console.log("LOGIN BODY RECEIVED:", requestBody);
     const { email, password } = requestBody;
-    return await this.userService.loginUser(email, password);
+    const res = await this.userService.loginUser(email, password);
+
+    return {
+      user: {
+        id: res.user.id,
+        email: res.user.email,
+        isActive: res.user.isActive,
+        isVerified: res.user.isVerified,
+        role: res.user.role, // role comes from DB, not from client
+      },
+      accessToken: res.accessToken,
+    };
   }
 
   @Post("/verify-email")

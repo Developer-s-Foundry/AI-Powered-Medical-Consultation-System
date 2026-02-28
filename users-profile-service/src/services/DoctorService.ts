@@ -52,6 +52,17 @@ export class DoctorService {
       throw error;
     }
   }
+  /**
+   * Get all doctors
+   */
+  async getAllDoctors(): Promise<DoctorProfile[]> {
+    try {
+      return await DoctorProfile.findAll();
+    } catch (error) {
+      logger.error("Error fetching all doctors:", error);
+      throw error;
+    }
+  }
 
   /**
    * Update doctor profile

@@ -219,18 +219,8 @@
 										"accessToken": {
 											"type": "string"
 										},
-										"createdAt": {
-											"type": "string",
-											"format": "date-time"
-										},
 										"role": {
 											"type": "string"
-										},
-										"isVerified": {
-											"type": "boolean"
-										},
-										"isActive": {
-											"type": "boolean"
 										},
 										"email": {
 											"type": "string"
@@ -241,10 +231,7 @@
 									},
 									"required": [
 										"accessToken",
-										"createdAt",
 										"role",
-										"isVerified",
-										"isActive",
 										"email",
 										"id"
 									],
@@ -262,6 +249,9 @@
 						"application/json": {
 							"schema": {
 								"properties": {
+									"role": {
+										"type": "string"
+									},
 									"password": {
 										"type": "string"
 									},
@@ -270,6 +260,7 @@
 									}
 								},
 								"required": [
+									"role",
 									"password",
 									"email"
 								],

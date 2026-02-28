@@ -10,7 +10,7 @@ class RabbitMQConnection {
   private reconnectTimeout: NodeJS.Timeout | null = null;
 
   constructor() {
-    this.url = process.env.RABBITMQ_URL || "amqp://localhost:5672";
+    this.url = process.env.RABBITMQ_URL || "amqp://localhost:5675";
     this.exchange = process.env.RABBITMQ_EXCHANGE || "health-bridge-events";
   }
 

@@ -30,11 +30,22 @@ export class UserRepository {
 
   private eventPublisher = new EventPublisher();
 
-  public async createUser(email: string, password: string): Promise<User> {
+  public async createUser(
+    email: string,
+    password: string,
+    role: string,
+  ): Promise<User> {
     const hash_password = await bcrypt.hash(password, 10);
+
+    const roleRepository = AppDataSource.getRepository("Role");
+    const roleEntity = await roleRepository.findOne({ where: { name: role } });
+    if (!roleEntity) {
+      throw new Error("Invalid role provide");
+    }
     const user = this.userRepository.create({
       email,
       password: hash_password,
+      ...(roleEntity ? { role: roleEntity } : {}), // Set role if provided
     });
     const savedUser = await this.save(user);
 
@@ -42,7 +53,7 @@ export class UserRepository {
     await this.eventPublisher.publishUserCreated({
       userId: savedUser.id,
       email: savedUser.email,
-      role: savedUser.role ? savedUser.role.name : "patient",
+      role: savedUser.role.name,
     });
 
     return savedUser;

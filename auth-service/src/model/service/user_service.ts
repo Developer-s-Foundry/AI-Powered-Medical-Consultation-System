@@ -11,15 +11,15 @@ class UserService {
     this.eventPublisher = new EventPublisher();
   }
 
-  public async createUser(email: string, password: string) {
+  public async createUser(email: string, password: string, role: string) {
     // Create user - returns User entity directly
-    const user = await this.userRepository.createUser(email, password);
+    const user = await this.userRepository.createUser(email, password, role);
 
     // Publish event
     await this.eventPublisher.publishUserCreated({
       userId: user.id,
       email: user.email,
-      role: user.role?.name || "patient",
+      role: user.role!.name,
     });
 
     // Generate token immediately after registration
@@ -31,7 +31,7 @@ class UserService {
       email: user.email,
       isActive: user.isActive,
       isVerified: user.isVerified,
-      role: user.role ? user.role.name : "patient",
+      role: user.role!.name,
       createdAt: user.createdAt,
       accessToken,
     };
@@ -52,7 +52,7 @@ class UserService {
         email: user.email,
         isActive: user.isActive,
         isVerified: user.isVerified,
-        role: user.role ? user.role.name : "patient",
+        role: user.role.name,
       },
       accessToken,
     };
@@ -60,13 +60,20 @@ class UserService {
 
   // Generate JWT token
   private generateAccessToken(user: any): string {
+    if (!user.role) {
+      throw new Error("User role is missing");
+    }
+    console.log(
+      "Signing with secret (first 10 chars):",
+      (process.env.AUTH_JWT_SECRET || "your-secret-key")?.substring(0, 10),
+    );
     return jwt.sign(
       {
         userId: user.id,
         email: user.email,
-        role: user.role?.name || "patient",
+        role: user.role.name,
       },
-      process.env.JWT_SECRET || "your-secret-key",
+      process.env.AUTH_JWT_SECRET || "your-secret-key",
       { expiresIn: "7d" },
     );
   }
@@ -79,10 +86,14 @@ class UserService {
     const user = await this.userRepository.findByEmail(email);
 
     if (user) {
+      if (!user.role) {
+        throw new Error("User role is missing");
+      }
+
       await this.eventPublisher.publishEmailVerified({
         userId: user.id,
         email: user.email,
-        role: user.role?.name || "patient",
+        role: user.role.name,
       });
     }
 

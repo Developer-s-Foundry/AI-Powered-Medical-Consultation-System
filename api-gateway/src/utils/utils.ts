@@ -10,6 +10,9 @@ export const processHeader = (req: Request) => {
     ),
   ) as Record<string, string>;
   delete headers["host"];
+  delete headers["content-length"];
+  delete headers["transfer-encoding"];
+  delete headers["connection"];
 
   //create a jwt signature
   if (!process.env.GATEWAY_SECRET) {
@@ -23,19 +26,26 @@ export const processHeader = (req: Request) => {
     },
   );
   headers["x-gateway-signature"] = gatewayToken;
+  headers["content-type"] = "application/json";
   return headers;
 };
 
 export const matchRoute = (pathname: string, routes: routes[]) => {
   for (const route of routes) {
-    const matchedRoute = matchPattern(pathname, route.pattern);
-    if (matchedRoute?.matched) {
+    // Strip trailing "/*" if present in pattern
+    const matchPattern = route.pattern.endsWith("/*")
+      ? route.pattern.slice(0, -2)
+      : route.pattern;
+
+    if (pathname.startsWith(matchPattern)) {
+      const remaining = pathname.slice(matchPattern.length) || "/";
       return {
         host: route.upstream,
-        path: pathname,
+        path: `${route.prefix}${remaining}`, // Get the remaining path after the matched pattern
       };
     }
   }
+
   return null;
 };
 
@@ -62,28 +72,28 @@ export const forwardRequest = async (
   headers: Record<string, string>,
   body?: any,
 ) => {
+  console.log("Forwarding to:", targetUrl);
+  console.log("Forwarding body:", JSON.stringify(body));
+
   const response = await fetch(targetUrl, {
     method,
     headers: {
-      ...headers,
       "Content-Type": "application/json",
+      "x-gateway-signature": headers["x-gateway-signature"],
+      ...(headers["authorization"] && {
+        authorization: headers["authorization"],
+      }),
+      ...(headers["x-user-id"] && { "x-user-id": headers["x-user-id"] }),
+      ...(headers["x-user-role"] && { "x-user-role": headers["x-user-role"] }),
     },
     body: ["GET", "HEAD"].includes(method) ? undefined : JSON.stringify(body),
   });
-  console.log("Forwarding to:", targetUrl);
 
   const contentType = response.headers.get("content-type") || "";
 
-  let data;
+  const data = contentType.includes("application/json")
+    ? await response.json()
+    : await response.text();
 
-  if (contentType.includes("application/json")) {
-    data = await response.json();
-  } else {
-    data = await response.text(); // prevents crash
-  }
-
-  return {
-    data,
-    status: response.status,
-  };
+  return { data, status: response.status };
 };

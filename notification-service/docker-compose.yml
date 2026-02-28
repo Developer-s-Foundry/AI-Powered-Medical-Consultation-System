@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5434:5432"
+      - "5437:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -25,7 +25,7 @@ services:
     container_name: healthbridge-redis
     command: redis-server --appendonly yes
     ports:
-      - "6379:6379"
+      - "6378:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -42,8 +42,8 @@ services:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
     ports:
-      - "5672:5672" # AMQP port
-      - "15672:15672" # Management UI
+      - "5675:5672" # AMQP port
+      - "15675:15672" # Management UI
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:

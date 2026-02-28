@@ -464,13 +464,13 @@ export class DoctorController {
    * GET /api/doctors/search?q=searchTerm
    */
   searchDoctors = asyncHandler(async (req: Request, res: Response) => {
-    const { q } = req.query;
+    const { q, name, specialty } = req.query;
+    const searchTerm = (q || name || specialty || "") as string;
 
-    if (!q) {
-      throw new AppError("Search query is required", 400);
-    }
-
-    const doctors = await doctorService.searchDoctors(q as string);
+    //  return all doctors if no query
+    const doctors = searchTerm
+      ? await doctorService.searchDoctors(searchTerm)
+      : await doctorService.getAllDoctors();
 
     res.json(
       ResponseFormatter.success(
@@ -486,7 +486,6 @@ export class DoctorController {
       ),
     );
   });
-
   /**
    * Get doctors by specialty (public)
    * GET /api/doctors/specialty/:specialty

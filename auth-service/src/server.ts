@@ -2,6 +2,7 @@ import "reflect-metadata";
 import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
+import { Role } from "./model/entities/roles.entity";
 import AppDataSource from "./config/database";
 import { Logger } from "./config/logger";
 import { RabbitMQConfig } from "./config/rabbitmq";
@@ -26,19 +27,36 @@ process.on("unhandledRejection", (reason) => {
 
   const port = process.env.PORT || 3004;
   const app: express.Application = express();
+
   app.use(express.json());
   console.log("3. Express setup done");
+  app.use((req, res, next) => {
+    console.log("Incoming request:", req.method, req.path);
+    console.log("Body:", JSON.stringify(req.body));
+    console.log("Method:", req.method);
+    console.log("Path:", req.path);
+    console.log("Content-Type:", req.headers["content-type"]);
+
+    console.log("Raw headers:", JSON.stringify(req.headers));
+    next();
+  });
+
+  RegisterRoutes(app);
 
   // Register Tsoa routes
   RegisterRoutes(app);
   console.log("4. Tsoa routes registered");
 
   // Swagger setup
-  app.use("/api", swaggerUi.serve, async (_req: ExRequest, res: ExResponse) => {
-    return res.send(
-      swaggerUi.generateHTML(await import("./swagger/swagger.json" as any)),
-    );
-  });
+  app.use(
+    "/docs",
+    swaggerUi.serve,
+    async (_req: ExRequest, res: ExResponse) => {
+      return res.send(
+        swaggerUi.generateHTML(await import("./swagger/swagger.json" as any)),
+      );
+    },
+  );
   console.log("5. Swagger UI setup done");
 
   try {
@@ -46,6 +64,16 @@ process.on("unhandledRejection", (reason) => {
     await AppDataSource.initialize();
     console.log("Database connection established successfully.");
 
+    //Seed roles
+    const roleRepository = AppDataSource.getRepository(Role);
+    const roles = ["patient", "doctor", "pharmacy"];
+    for (const name of roles) {
+      const exists = await roleRepository.findOne({ where: { name } });
+      if (!exists) {
+        await roleRepository.save(roleRepository.create({ name }));
+      }
+    }
+    console.log("Roles seeded successfully.");
     // Initialize RabbitMQ connection
     try {
       console.log("7. Attempting to connect to RabbitMQ...");

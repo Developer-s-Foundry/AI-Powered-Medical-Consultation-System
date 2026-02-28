@@ -14,13 +14,14 @@ export const apiMiddleware = async (
     const routePart = matchRoute(pathname, routingParts);
     if (!routePart) throw new AppError("Resource not found", 404);
 
-    const targetUrl = `${routePart.host}${req.originalUrl}`;
+    const targetUrl = `${routePart.host}${routePart.path}`;
+    console.log("Matched route:", routePart);
     const headers = processHeader(req);
 
-    // --- Public routes (no auth required)
     const isPublic = authPublicRoutes.some((route) =>
       pathname.startsWith(route),
     );
+
     if (isPublic) {
       const data = await forwardRequest(
         targetUrl,
@@ -31,7 +32,6 @@ export const apiMiddleware = async (
       return res.status(data.status).json(data.data);
     }
 
-    // --- Protected routes (require JWT)
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ message: "Unauthorized" });
 
@@ -39,10 +39,18 @@ export const apiMiddleware = async (
     if (!token) return res.status(401).json({ message: "Unauthorized" });
 
     try {
+      console.log(
+        "Gateway secret (first 10 chars):",
+        process.env.AUTH_JWT_SECRET?.substring(0, 10),
+      );
+      console.log("Token (first 20 chars):", token?.substring(0, 20));
+
       const decoded = jwt.verify(
         token,
         process.env.AUTH_JWT_SECRET as string,
       ) as any;
+      console.log("Decoded JWT:", decoded);
+
       headers["x-user-id"] = decoded.userId;
       headers["x-user-role"] = decoded.role;
 
@@ -53,7 +61,8 @@ export const apiMiddleware = async (
         req.body,
       );
       return res.status(data.status).json(data.data);
-    } catch {
+    } catch (err) {
+      console.log("JWT verify error:", err);
       return res.status(403).json({ message: "Invalid or expired token" });
     }
   } catch (err: any) {
