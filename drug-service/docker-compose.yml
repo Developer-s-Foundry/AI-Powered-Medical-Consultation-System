@@ -29,8 +29,8 @@ services:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
     ports:
-      - "5672:5672" # AMQP port
-      - "15672:15672" # Management UI
+      - "5676:5672" # AMQP port
+      - "15676:15672" # Management UI
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
@@ -54,7 +54,7 @@ services:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
       RABBITMQ_EXCHANGE: health-bridge-events
       JWT_SECRET: your-super-secret-jwt-key-change-in-production
-      CLIENT_URL: http://localhost:3000
+      CLIENT_URL: http://localhost:5173
       LOG_LEVEL: info
     ports:
       - "3002:3002"
