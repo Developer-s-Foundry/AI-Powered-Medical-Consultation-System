@@ -11,11 +11,25 @@ export const routingParts = [
     pattern: "/api/v1/notifications/*",
     prefix: "",
   },
-  { upstream: "http://localhost:2012", pattern: "/api/v1/drugs/*", prefix: "" },
+  {
+    upstream: "http://localhost:2012",
+    pattern: "/api/v1/drugs/*",
+    prefix: "/api/drugs",
+  },
   {
     upstream: "http://localhost:3007",
     pattern: "/api/v1/profiles/*",
     prefix: "/api",
+  },
+  {
+    upstream: "http://localhost:2012",
+    pattern: "/api/v1/prescription/*",
+    prefix: "/api/prescription",
+  },
+  {
+    upstream: "http://localhost:2012",
+    pattern: "/api/v1/pharm/*",
+    prefix: "/api/pharm",
   },
 ];
 export const authPublicRoutes = [
