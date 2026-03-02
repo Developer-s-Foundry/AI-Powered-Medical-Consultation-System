@@ -9,7 +9,7 @@ export const routingParts = [
   {
     upstream: "http://localhost:2002",
     pattern: "/api/v1/notifications/*",
-    prefix: "",
+    prefix: "/api/v1/notifications",
   },
   {
     upstream: "http://localhost:2012",
