@@ -1,7 +1,8 @@
-import { PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from "typeorm"
+import { PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, OneToOne, CreateDateColumn } from "typeorm"
 import { AiResponse } from "./ai_responses"
 import { Session } from "./session"
 import { Recommendation } from "./recommendation"
+import { Escalation } from "./escalation"
 
 
 export class RiskEvent {
@@ -22,6 +23,9 @@ export class RiskEvent {
     advice_shown!: boolean
 
     @Column()
+    action_taken!: string
+
+    @CreateDateColumn()
     evaluated_at!: Date
 
     @OneToMany(() => Recommendation, (recommendation) => recommendation.risk_event)
@@ -29,6 +33,9 @@ export class RiskEvent {
 
     @ManyToOne(() => AiResponse, (ai_response) => ai_response.risk_event)
     ai_response!: AiResponse
+
+    @OneToOne(() => Escalation, escalation => escalation.risk_event)
+    escalation!: Escalation
 
     @ManyToOne(() => Session, (session) => session.risk_event)
     session!: Session

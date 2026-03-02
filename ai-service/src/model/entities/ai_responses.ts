@@ -1,4 +1,4 @@
-import { RiskLevel } from '../types/enum.types';
+import { RiskLevel } from '../../types/enum.types';
 import { Column, CreateDateColumn, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm"
 import { Session } from './session';
 import { ResponseSymptom } from './response_symptom';

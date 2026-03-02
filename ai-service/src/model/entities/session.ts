@@ -1,10 +1,11 @@
 import { CreateDateColumn, PrimaryGeneratedColumn,OneToOne ,Column, OneToMany } from "typeorm"
-import { RiskLevel, SessionStatus } from "../types/enum.types"
+import { RiskLevel, SessionStatus } from "../../types/enum.types"
 import { AiResponse } from "./ai_responses"
 import { Message } from "./messages"
 import { Booking } from "./booking"
 import { RiskEvent } from "./risk_events"
 import { Recommendation } from "./recommendation"
+import { Escalation } from "./escalation"
 
 
 export class Session {
@@ -40,4 +41,7 @@ export class Session {
 
     @OneToMany(() => Recommendation, (recommendation) => recommendation.session)
     recommendation!: Session []
+
+    @OneToMany(() => Escalation, escalation => escalation.session)
+    escalation!: Escalation []
 }

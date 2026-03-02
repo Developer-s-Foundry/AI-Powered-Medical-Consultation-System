@@ -19,7 +19,7 @@ export class ResponseSymptom {
     precision: 5,
     scale: 2,
     })
-    applied_weight!: string
+    applied_weight!: string // default weight * multiplier * confidence
 
     @ManyToOne(() => AiResponse, (ai_response) => ai_response.response_symptom)
     ai_response!: AiResponse

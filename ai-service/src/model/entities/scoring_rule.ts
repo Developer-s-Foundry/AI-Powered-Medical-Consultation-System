@@ -1,9 +1,9 @@
 import { Column, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
 import { SymptomCode } from "./symptom_code"
-import { RiskLevel } from "../types/enum.types"
+import { RiskLevel } from "../../types/enum.types"
 
 
-export class Scoring {
+export class ScoringRule {
     @PrimaryGeneratedColumn('uuid')
     id!: string
 
@@ -19,6 +19,9 @@ export class Scoring {
 
     @Column({type: 'enum', enum: RiskLevel})
     applies_to_risk!: string
+
+    @Column()
+    is_active!: boolean
 
     @Column()
     effective_from!: Date // date from which this rule version is valid, allowing rule versioning over time

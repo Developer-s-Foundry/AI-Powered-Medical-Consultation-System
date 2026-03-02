@@ -5,7 +5,7 @@ import { RiskEvent } from "./risk_events"
 
 export class Recommendation {
     @PrimaryGeneratedColumn('uuid')
-    id!: string
+    rec_id!: string
 
     @Column()
     doctor_id!: string

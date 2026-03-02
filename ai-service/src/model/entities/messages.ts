@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn,OneToOne, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
-import { MessageDirection } from "../types/enum.types"
+import { MessageDirection } from "../../types/enum.types"
 import { AiResponse } from "./ai_responses"
 import { Session } from "./session"
 
