@@ -1,14 +1,15 @@
 import { AiResponse } from "../entities/ai_responses";
 import { Repository } from "typeorm";
-import { Socket } from "socket.io";
 import { Message } from "../entities/messages";
 import { RiskEvent } from "../entities/risk_events";
 import { Recommendation } from "../entities/recommendation";
-import { RiskLevel } from '../../types/types.interface';
-
-
+import { PipelineParams, RawAIResponse } from '../../types/types.interface';
+import { Logger } from "../../config/logger";
+import { AIService } from "./ai_service";
 
 export class AIPipelineService {
+    private logger = Logger.getInstance()
+    private aiService = new AIService()
   constructor(
     private aiResponseRepo: Repository<AiResponse>,
     private messageRepo: Repository<Message>,
@@ -24,40 +25,29 @@ export class AIPipelineService {
     content,
     socket,
   }: PipelineParams): Promise<void> {
-    console.log(`Pipeline start | session=${sessionId}`);
+    this.logger.info(`Pipeline start | session=${sessionId}`);
 
     // ── STAGE 1: Call AI
     let rawAIResponse: RawAIResponse;
 
     try {
-      rawAIResponse = await callAI(content);
+      rawAIResponse = await this.aiService.callAI(content);
     } catch (err: any) {
       socket.emit("TYPING_INDICATOR", { active: false });
       socket.emit("ERROR", {
         code: "AI_UNAVAILABLE",
         message: "Medical AI temporarily unavailable.",
       });
-
-      await this.auditRepo.save({
-        id: uuidv4(),
-        session_id: sessionId,
-        patient_id: patientId,
-        event_type: "ai_call_failed",
-        payload: { error: err.message },
-      });
-
       return;
     }
 
     // ── STAGE 2: Validate
     const { valid, filtered } =
-      await validateAIResponse(rawAIResponse);
+      await this.aiService.validateAIResponse(rawAIResponse);
 
     // ── STAGE 3: Store AI response
-    const responseId = uuidv4();
 
     const aiResponse = this.aiResponseRepo.create({
-      response_id: responseId,
       message_id: messageId,
       session_id: sessionId,
       raw_json: rawAIResponse,
@@ -192,6 +182,6 @@ export class AIPipelineService {
       },
     });
 
-    console.log("Pipeline complete");
+    this.logger.info("Pipeline complete");
   }
 }

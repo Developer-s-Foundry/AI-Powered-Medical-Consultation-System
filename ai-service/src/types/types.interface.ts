@@ -8,20 +8,17 @@ export interface patientPayload {
 
 export type RiskLevel = "HIGH" | "MEDIUM" | "LOW";
 
-export interface AISymptomCode {
-  code: string;
-  confidence: number;
-}
+
 
 export interface AIResponse {
   risk_level: RiskLevel;
-  symptom_codes: AISymptomCode[];
+  symptom_codes: SymptomCode[];
   advice: string;
 }
 
 export interface SymptomInput {
   code: string;
-  confidence: number;
+  confidence?: number;
 }
 
 export interface EvaluateRiskParams {
@@ -59,23 +56,19 @@ export interface ReplacementRule {
 
 export interface SymptomCode {
   code: string;
-  confidence?: number;
+  confidence: number;
 }
 
 export interface RawAIResponse {
   risk_level: RiskLevel;
-  symptom_codes?: SymptomCode[];
-  advice?: string;
+  symptom_codes: SymptomCode[];
+  advice: string;
 }
 
 export interface ValidatedAIResponse {
   valid: boolean;
   errors: string[];
-  filtered: {
-    risk_level: RiskLevel;
-    symptom_codes: SymptomCode[];
-    advice: string;
-  };
+  filtered: RawAIResponse;
 }
 
 export interface RiskEvaluationResult {

@@ -29,8 +29,8 @@ export const config = {
     GATEWAY_SECRET_KEY: getenv(environment_variables.GATEWAY_SECRET_KEY),
     PAYSTACK_SECRET_KEY: getenv(environment_variables.PAYSTACK_SECRET_KEY),
     PAYSTACK_BASE_URL: getenv(environment_variables.PAYSTACK_BASE_URL),
-    REDIS_HOST: getenv(environment_variables.REDIS_HOST)
-    REDIS_PORT: getenv(environment_variables.REDIS_PORT)
-    REDIS_PASSWORD: getenv(environment_variables.REDIS_PASSWORD)
+    REDIS_HOST: getenv(environment_variables.REDIS_HOST),
+    REDIS_PORT: getenv(environment_variables.REDIS_PORT),
+    REDIS_PASSWORD: getenv(environment_variables.REDIS_PASSWORD),
     REDIS_DB: getenv(environment_variables.REDIS_DB)
 }
