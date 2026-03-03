@@ -35,6 +35,7 @@ export class PharmacyController {
           phone: profile.phone,
           lincenseNumber: profile.lincenseNumber,
           address: profile.address,
+          operationDays: profile.operationDays,
           createdAt: profile.createdAt,
         },
         "Pharmacy profile created successfully",
