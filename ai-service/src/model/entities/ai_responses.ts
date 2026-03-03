@@ -4,7 +4,7 @@ import { Session } from './session';
 import { ResponseSymptom } from './response_symptom';
 import { Message } from './messages';
 import { RiskEvent } from './risk_events';
-
+import { RawAIResponse } from '../../types/types.interface';
 
 
 export class AiResponse {
@@ -12,14 +12,14 @@ export class AiResponse {
     @PrimaryGeneratedColumn('uuid')
     response_id!: string
 
-    @Column({type:'jsonb', nullable:true})
-    raw_json!: string[] // JSONB of the full payload the AI returned, stored for debugging and auditing
+    @Column({type:'json', nullable:true})
+    raw_json!: RawAIResponse // JSONB of the full payload the AI returned, stored for debugging and auditing
 
     @Column({type: 'enum', enum: RiskLevel })
-    risk_level!: RiskLevel //the AI's assessed level: HIGH, MEDIUM, or LOW
+    risk_level!: string //the AI's assessed level: HIGH, MEDIUM, or LOW
 
-    @Column({type: 'text'})
-    ai_advice!: Text // the advice text the AI generated
+    @Column({ nullable: true})
+    ai_advice!: string | null // the advice text the AI generated
 
     @Column()
     json_valid!: boolean
@@ -34,7 +34,7 @@ export class AiResponse {
     created_at!: Date
 
     @OneToMany(() => ResponseSymptom, (response_symptom) => response_symptom.ai_response)
-    response_symptom!: ResponseSymptom
+    response_symptom!: ResponseSymptom []
 
     @OneToOne(() => Message, (message) => message.ai_response)
     @JoinColumn()
@@ -44,5 +44,5 @@ export class AiResponse {
     session!: Session
 
     @OneToMany(() => RiskEvent, (risk_event) => risk_event.ai_response)
-    risk_event!: RiskEvent
+    risk_event!: RiskEvent []
 }

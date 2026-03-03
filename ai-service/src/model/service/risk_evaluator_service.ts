@@ -99,12 +99,9 @@ export class RiskEvaluatorService {
       `action=${action} | adviceShown=${adviceShown} | needsDoctor=${needsDoctor}`
     );
 
-    // ── Insert RiskEvent
+    // ── create RiskEvent
 
-    const eventId = uuidv4();
-
-    await this.riskEventRepo.insert({
-      id: eventId,
+     const newRiskEvent = this.riskEventRepo.create({
       ai_response: {response_id: responseId},
       session: {id: sessionId},
       risk_level: riskLevel,
@@ -113,6 +110,7 @@ export class RiskEvaluatorService {
       advice_shown: adviceShown,
     });
 
+    this.riskEventRepo.save(newRiskEvent)
     // ── Update AI response advice_used
 
     await this.aiResponseRepo.update(
@@ -132,16 +130,16 @@ export class RiskEvaluatorService {
     let escalationId: string | null = null;
 
     if (riskLevel === "HIGH") {
-      escalationId = uuidv4();
 
-      await this.escalationRepo.insert({
-        escalation_id: escalationId,
-        risk_event: {id: eventId},
+      const newEscalation = this.escalationRepo.create({
+        risk_event: {id: newRiskEvent.id},
         session: {id:sessionId},
         patient_id: patientId,
         escalation_type: "alert",
         notified_at: new Date(),
       });
+
+      await this.escalationRepo.save(newEscalation);
 
       // Mark session as escalated
       await this.sessionRepo.update(
@@ -153,7 +151,7 @@ export class RiskEvaluatorService {
     }
 
     return {
-      eventId,
+      eventId: newRiskEvent.id,
       action,
       adviceShown,
       adviceUsed,

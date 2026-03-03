@@ -2,7 +2,7 @@
 import { ResponseSymptom } from "../entities/response_symptom";
 import { SymptomSpecialty } from "../entities/symptom_specialty";
 import { Recommendation } from "../entities/recommendation";
-import { MatchDoctorParams } from "../../types/types.interface";
+import { MatchDoctorParams, RecommendationDetails } from "../../types/types.interface";
 import { Logger } from "../../config/logger";
 import AppDataSource from "../../config/database";
 import { config } from "../../config/env.config";
@@ -82,7 +82,7 @@ export class DoctorMatcher {
     recType,
     weightedScore,
     riskLevel,
-  }: MatchDoctorParams) {
+  }: MatchDoctorParams): Promise<RecommendationDetails> {
     this.logger.info(`Matching doctor: recType=${recType} score=${weightedScore}`);
 
     const responseSymptomRepo =

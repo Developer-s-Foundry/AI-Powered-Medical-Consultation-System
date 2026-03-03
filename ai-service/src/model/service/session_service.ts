@@ -20,7 +20,6 @@ export class SessionService {
    */
   async createSession(options: {
     patientId: string;
-    channel: string;
   }): Promise<Session> {
     const session = this.repository.create({
       patient_id: options.patientId,

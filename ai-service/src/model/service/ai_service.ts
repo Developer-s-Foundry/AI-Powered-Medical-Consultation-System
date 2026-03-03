@@ -1,6 +1,6 @@
 import AppDataSource from "../../config/database";
 import { SymptomCode } from "../entities/symptom_code";
-import { AIResponse } from "../../types/types.interface";
+import { RawAIResponse } from "../../types/types.interface";
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const MODEL = "claude-sonnet-4-20250514";
@@ -84,7 +84,7 @@ REQUIRED JSON FORMAT:
   /**
    * Call Anthropic API
    */
-  async callAI(patientMessage: string): Promise<AIResponse> {
+  async callAI(patientMessage: string): Promise<RawAIResponse> {
     const systemPrompt = await this.buildSystemPrompt();
 
     const response = await fetch(ANTHROPIC_API_URL, {
@@ -126,7 +126,7 @@ REQUIRED JSON FORMAT:
       .replace(/```\s*/g, "")
       .trim();
 
-    let parsed: AIResponse;
+    let parsed: RawAIResponse;
 
     try {
       parsed = JSON.parse(cleaned);
@@ -143,11 +143,11 @@ REQUIRED JSON FORMAT:
    * Validate AI response against DB and schema
    */
   async validateAIResponse(
-    aiResponse: AIResponse
+    aiResponse: RawAIResponse
   ): Promise<{
     valid: boolean;
     errors: string[];
-    filtered: AIResponse | null;
+    filtered: RawAIResponse | null;
   }> {
     const errors: string[] = [];
 

@@ -18,17 +18,11 @@ import { initializeSocket } from './config/socket';
     const logger = Logger.getInstance();
 
     const port = process.env.PORT;
-    const app: express.Application = express();
-     app.use(express.json());
-    Registeroutes(app)
-        // Swagger ui setup
-    app.use("/api", swaggerUi.serve, async (_req: ExRequest, res: ExResponse) => {
-        return res.send(
-            swaggerUi.generateHTML(await import("./swagger/swagger.json"))
-        );
-    });
+    // const app: express.Application = express();
+    //  app.use(express.json());
+ 
     //initialize socket with server
-    const server = http.createServer(app);
+    const server = http.createServer();
     const io = initializeSocket(server);
     io.use(socketAuthMiddleware);
     

@@ -53,5 +53,6 @@ export enum RecommendationType {
 
 export enum MessageType {
     PATIENT_MESSAGE = 'PATIENT_MESSAGE',
-    AI_RESPONSE = 'AI_RESPONSE'
+    AI_RESPONSE = 'AI_RESPONSE',
+    BOOKING = 'BOOKING'
 }

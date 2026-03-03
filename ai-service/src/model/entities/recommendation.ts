@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
-import { RecommendationType } from "../types/enum.types"
+import { RecommendationType } from "../../types/enum.types"
 import { Session } from "./session"
 import { RiskEvent } from "./risk_events"
 

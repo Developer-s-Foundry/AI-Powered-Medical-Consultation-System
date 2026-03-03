@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, JoinColumn, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm"
 import { Appointment } from "./appointment"
-import { PaymentStatus } from "../types/enum.types"
+import { PaymentStatus } from "../../types/enum.types"
 import { Session } from "./session"
 
 

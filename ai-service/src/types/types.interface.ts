@@ -1,3 +1,4 @@
+import { Recommendation } from './../model/entities/recommendation';
 import { Server } from 'socket.io'
 
 
@@ -6,19 +7,12 @@ export interface patientPayload {
     content: string
 }
 
-export type RiskLevel = "HIGH" | "MEDIUM" | "LOW";
 
 
-
-export interface AIResponse {
-  risk_level: RiskLevel;
-  symptom_codes: SymptomCode[];
-  advice: string;
-}
 
 export interface SymptomInput {
   code: string;
-  confidence?: number;
+  confidence: number;
 }
 
 export interface EvaluateRiskParams {
@@ -35,7 +29,7 @@ export interface EvaluateRiskResult {
   adviceShown: boolean;
   adviceUsed: boolean;
   needsDoctor: boolean;
-  recType: "mandatory" | "optional" | null;
+  recType: "mandatory" | "optional" ;
   escalationId: string | null;
 }
 
@@ -58,6 +52,8 @@ export interface SymptomCode {
   code: string;
   confidence: number;
 }
+
+export type RiskLevel = "HIGH" | "MEDIUM" | "LOW";
 
 export interface RawAIResponse {
   risk_level: RiskLevel;
@@ -86,6 +82,19 @@ export interface PipelineParams {
   patientId: string;
   content: string;
   socket: Server;
+  socketId: string
+}
+
+export interface RecommendationDetails {
+      rec_id: string,
+      rec_type: string,
+      reason: string,
+      doctor: {
+        doctor_id: string,
+        first_name: string,
+        last_name: string,
+        specialty: string,
+      },
 }
 
 // {
