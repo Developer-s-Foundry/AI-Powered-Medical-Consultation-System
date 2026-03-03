@@ -31,6 +31,10 @@ export class PrescriptionController {
       prescription.id,
     );
 
+    if (!fullPrescription) {
+      throw new AppError("Prescription not found after creation", 500);
+    }
+
     logger.info(
       `Prescription created: ${prescription.id} by doctor: ${doctorId}`,
     );
@@ -38,16 +42,16 @@ export class PrescriptionController {
     res.status(201).json(
       ResponseFormatter.success(
         {
-          id: fullPrescription!.id,
-          doctorId: fullPrescription!.doctorId,
-          patientId: fullPrescription!.patientId,
-          appointmentId: fullPrescription!.appointmentId,
-          diagnosis: fullPrescription!.diagnosis,
-          instructions: fullPrescription!.instructions,
-          notes: fullPrescription!.notes,
-          status: fullPrescription!.status,
-          items: fullPrescription!.items,
-          createdAt: fullPrescription!.createdAt,
+          id: fullPrescription.id,
+          doctorId: fullPrescription.doctorId,
+          patientId: fullPrescription.patientId,
+          appointmentId: fullPrescription.appointmentId,
+          diagnosis: fullPrescription.diagnosis,
+          instructions: fullPrescription.instructions,
+          notes: fullPrescription.notes,
+          status: fullPrescription.status,
+          items: fullPrescription.items,
+          createdAt: fullPrescription.createdAt,
         },
         "Prescription created successfully",
       ),
