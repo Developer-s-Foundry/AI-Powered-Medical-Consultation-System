@@ -181,7 +181,9 @@ export class Notification extends Model<NotificationAttributes> {
       limit: options?.limit || 50,
       offset: options?.offset || 0,
       order: [["created_at", "DESC"]],
-      include: [{ model: NotificationDeliveryLog }],
+      distinct: true,
+      col: "id",
+      include: [{ model: NotificationDeliveryLog, separate: true }],
     });
   }
 

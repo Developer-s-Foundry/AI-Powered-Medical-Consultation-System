@@ -6,7 +6,8 @@ import logger from "../utils/logger";
 
 const sequelize = new Sequelize(process.env.DATABASE_URL!, {
   dialect: "postgres",
-  logging: (msg) => logger.debug(msg),
+  //logging: (msg) => logger.debug(msg),
+  logging: console.log,
   models: [Notification, NotificationDeliveryLog, NotificationTemplate], // Auto-load all models
   pool: {
     max: 5,
@@ -28,10 +29,13 @@ export const connectDB = async (): Promise<void> => {
     // Sync models in development
     if (process.env.NODE_ENV === "development") {
       try {
-        await sequelize.sync({ alter: true });
+        await sequelize.sync({ force: true });
         logger.info(" Database models synchronized");
       } catch (err: any) {
-        logger.warn(" Sync failed, possibly due to existing indexes. Skipping sync:", err.message);
+        logger.warn(
+          " Sync failed, possibly due to existing indexes. Skipping sync:",
+          err.message,
+        );
       }
     }
   } catch (error: any) {

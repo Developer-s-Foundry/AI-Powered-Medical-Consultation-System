@@ -110,7 +110,11 @@ export class NotificationService {
 
       return notification;
     } catch (error) {
-      logger.error("Error creating notification:", error);
+      logger.error(
+        "Error:",
+        (error as any).message,
+        (error as any).original?.message,
+      );
       throw error;
     }
   }
