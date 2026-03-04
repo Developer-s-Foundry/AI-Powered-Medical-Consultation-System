@@ -1,14 +1,10 @@
-import { Recommendation } from './../model/entities/recommendation';
-import { Server } from 'socket.io'
-
+import { Recommendation } from "./../model/entities/recommendation";
+import { Server } from "socket.io";
 
 export interface patientPayload {
-    type: string
-    content: string
+  type: string;
+  content: string;
 }
-
-
-
 
 export interface SymptomInput {
   code: string;
@@ -29,7 +25,7 @@ export interface EvaluateRiskResult {
   adviceShown: boolean;
   adviceUsed: boolean;
   needsDoctor: boolean;
-  recType: "mandatory" | "optional" ;
+  recType: "mandatory" | "optional" | null;
   escalationId: string | null;
 }
 
@@ -37,11 +33,10 @@ export interface MatchDoctorParams {
   eventId: string;
   sessionId: string;
   responseId: string;
-  recType: "mandatory" | "optional";
+  recType: "mandatory" | "optional" | null;
   weightedScore: number;
   riskLevel: string;
 }
-
 
 export interface ReplacementRule {
   pattern: RegExp;
@@ -82,19 +77,19 @@ export interface PipelineParams {
   patientId: string;
   content: string;
   socket: Server;
-  socketId: string
+  socketId: string;
 }
 
 export interface RecommendationDetails {
-      rec_id: string,
-      rec_type: string,
-      reason: string,
-      doctor: {
-        doctor_id: string,
-        first_name: string,
-        last_name: string,
-        specialty: string,
-      },
+  rec_id: string;
+  rec_type: "mandatory" | "optional" | null;
+  reason: string;
+  doctor: {
+    doctor_id: string;
+    first_name: string;
+    last_name: string;
+    specialty: string;
+  } | null;
 }
 
 // {
@@ -113,7 +108,6 @@ export interface RecommendationDetails {
 //   content: "Monitor your blood sugar...",
 //   recommendation: null   // frontend sees null, renders no button
 // }
-
 
 // {
 //   type: "TRIAGE_RESPONSE",
