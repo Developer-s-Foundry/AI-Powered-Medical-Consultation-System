@@ -4,6 +4,7 @@ import { AIPipelineService } from "../model/service/ai_pipeline_service";
 import { SessionService } from "../model/service/session_service";
 import { MessageService } from "../model/service/message_service";
 import { Server } from "socket.io";
+import { AppError } from "../custom.functions.ts/error";
 
 
 /**
@@ -25,17 +26,12 @@ export const handleMessages = async (userId: string, socket: Server, socketId: s
             await handlePatientMessage(userId, socket, socketId, payload);
         }
             break;
-
-        case MessageType.BOOKING: {
-            // handle booking
-        }
-            break;
     
-        default:
-            break;
+        default: {
+           throw new AppError('invalid type', 400)
+        }
     }
 }
-
 
 
 async function handlePatientMessage (userId: string, socket: Server, socketId: string,  payload: patientPayload) {
