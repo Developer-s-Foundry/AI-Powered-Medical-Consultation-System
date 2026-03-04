@@ -1,0 +1,91 @@
+### Variables
+@baseUrl = http://localhost:3002
+@pharmacyToken = paste-pharmacy-token-here
+@doctorToken = paste-doctor-token-here
+@patientToken = paste-patient-token-here
+
+### Health Check
+GET {{baseUrl}}/health
+
+### ========================================
+### DRUG ENDPOINTS
+### ========================================
+
+### Create Drug (Pharmacy)
+POST {{baseUrl}}/api/drugs/create
+Authorization: Bearer {{pharmacyToken}}
+Content-Type: application/json
+
+{
+  "medicineName": "Paracetamol",
+  "dosage": "500mg",
+  "manufacturer": "GlaxoSmithKline",
+  "quantity": 100,
+  "price": 500.00,
+  "expiryDate": "2026-12-31",
+  "description": "Pain relief and fever reducer",
+  "requiresPrescription": false
+}
+
+### Search Drugs (Public - No Auth)
+GET {{baseUrl}}/api/drugs/search?medicineName=Paracetamol
+
+### Search with Filters
+GET {{baseUrl}}/api/drugs/search?medicineName=Paracetamol&maxPrice=600
+
+### Get Drug by ID
+GET {{baseUrl}}/api/drugs/123e4567-e89b-12d3-a456-426614174000
+
+### Update Drug (Pharmacy)
+PUT {{baseUrl}}/api/drugs/123e4567-e89b-12d3-a456-426614174000
+Authorization: Bearer {{pharmacyToken}}
+Content-Type: application/json
+
+{
+  "quantity": 150,
+  "price": 550.00
+}
+
+### ========================================
+### PRESCRIPTION ENDPOINTS
+### ========================================
+
+### Create Prescription (Doctor)
+POST {{baseUrl}}/api/pharm/prescription/create
+Authorization: Bearer {{doctorToken}}
+Content-Type: application/json
+
+{
+  "appointmentId": "770e8400-e29b-41d4-a716-446655440003",
+  "patientId": "550e8400-e29b-41d4-a716-446655440002",
+  "diagnosis": "Bacterial throat infection",
+  "instructions": "Take all medicines with food",
+  "notes": "Follow up in 7 days if symptoms persist",
+  "items": [
+    {
+      "drugId": "123e4567-e89b-12d3-a456-426614174000",
+      "dosage": "2 capsules",
+      "duration": "3 times daily for 7 days",
+      "quantityPrescribed": 42
+    }
+  ]
+}
+
+### View Prescriptions (Patient/Doctor)
+GET {{baseUrl}}/api/prescription/view
+Authorization: Bearer {{patientToken}}
+
+### Get Prescription by ID
+GET {{baseUrl}}/api/prescription/789e4567-e89b-12d3-a456-426614174111
+Authorization: Bearer {{patientToken}}
+
+### Update Prescription Status (Doctor)
+PATCH {{baseUrl}}/api/prescription/789e4567-e89b-12d3-a456-426614174111/status
+Authorization: Bearer {{doctorToken}}
+Content-Type: application/json
+
+{
+  "status": "fulfilled"
+}
+
+###

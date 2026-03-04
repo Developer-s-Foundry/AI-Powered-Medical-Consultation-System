@@ -50,8 +50,8 @@ const config: Config = {
   app: {
     name: "Notification Service",
     env: process.env.NODE_ENV || "development",
-    port: parseInt(process.env.PORT || "3007"),
-    clientUrl: process.env.CLIENT_URL || "http://localhost:3000",
+    port: parseInt(process.env.PORT || "2002"),
+    clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
   },
   database: {
     url: process.env.DATABASE_URL!,
