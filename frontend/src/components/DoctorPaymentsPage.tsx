@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { C, EP } from "./Shared";
-import { call } from "./Shared";
+import { C } from "./Shared";
+import { EP } from "../config";
+import { call } from "../api";
 import { Card, Btn, Bdg, StatCard, Tbl } from "./Shared";
 import { SBdg } from "./Shared";
 import type { AuthUser } from "./Shared";
@@ -9,9 +10,21 @@ type DoctorPaymentsPageProps = {
   user: AuthUser;
 };
 
+type PaymentData = {
+  consultationFees?: Record<string, number>;
+  totalEarned?: number;
+  balance?: number;
+  pending?: number;
+  paystack?: {
+    accountId?: string;
+    accountStatus?: string;
+    payoutsEnabled?: boolean;
+    chargesEnabled?: boolean;
+  };
+};
 export const DoctorPaymentsPage = ({ user }: DoctorPaymentsPageProps) => {
-  const [pd, setPd] = useState<any>(null);
-  const [payments, setPayments] = useState([]);
+  const [pd, setPd] = useState<PaymentData | null>(null);
+  const [payments, setPayments] = useState<Record<string, unknown>[]>([]);
 
   useEffect(() => {
     call(EP.DOCTOR_PAYMENT_DATA(user.id))
@@ -57,6 +70,7 @@ export const DoctorPaymentsPage = ({ user }: DoctorPaymentsPageProps) => {
           <Btn
             sz="sm"
             style={{ background: "#fff", color: C.p, border: "none" }}
+            onClick={() => {}}
           >
             Withdraw
           </Btn>
@@ -84,7 +98,7 @@ export const DoctorPaymentsPage = ({ user }: DoctorPaymentsPageProps) => {
               k: "patientId",
               r: (r) => (
                 <span style={{ fontFamily: "monospace", fontSize: 11 }}>
-                  {r.patientId?.slice(0, 12)}…
+                  {(r.patientId as string)?.slice(0, 12)}…
                 </span>
               ),
             },
@@ -92,13 +106,13 @@ export const DoctorPaymentsPage = ({ user }: DoctorPaymentsPageProps) => {
               k: "amount",
               r: (r) => (
                 <span style={{ fontWeight: 700, color: C.g }}>
-                  ₦{r.amount?.toLocaleString()}
+                  ₦{(r.amount as number)?.toLocaleString()}
                 </span>
               ),
             },
-            { k: "method", r: (r) => <Bdg>{r.method}</Bdg> },
+            { k: "method", r: (r) => <Bdg>{r.method as string}</Bdg> },
             { k: "createdAt" },
-            { k: "status", r: (r) => SBdg(r.status) },
+            { k: "status", r: (r) => SBdg(r.status as string) },
           ]}
           rows={payments}
         />

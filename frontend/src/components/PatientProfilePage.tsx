@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { C, EP } from "./Shared";
-import { call } from "./Shared";
-import { Card, Btn, Inp, Sel, Alrt, Spin, Av, Bdg, Hr, Tag } from "./Shared";
-import type { AuthUser, Profile } from "./Shared";
+import { EP } from "../config";
+import { C } from "./Shared";
+import { call } from "../api";
+import { Card, Btn, Inp, Sel, Alrt, Spin, Av, Bdg, Hr } from "./Shared";
+import type { AuthUser, PatientProfile, Profile } from "../types";
 
 type PatientProfilePageProps = {
   user: AuthUser;
@@ -20,12 +21,16 @@ export const PatientProfilePage = ({
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
   const [ok, setOk] = useState("");
+
+  const pat = profile as PatientProfile;
+  const addr = pat?.address;
+
   const [f, setF] = useState({
-    firstName: initialProfile?.firstName || "",
-    lastName: initialProfile?.lastName || "",
-    phone: initialProfile?.phone || "",
-    dateOfBirth: initialProfile?.dateOfBirth || "",
-    gender: initialProfile?.gender || "male",
+    firstName: pat?.firstName || "",
+    lastName: pat?.lastName || "",
+    phone: pat?.phone || "",
+    dateOfBirth: pat?.dateOfBirth || "",
+    gender: pat?.gender || "male",
   });
 
   const update = async () => {
@@ -36,8 +41,8 @@ export const PatientProfilePage = ({
       setProfile(res.data || res);
       setShowEdit(false);
       setOk("Profile updated!");
-    } catch (e: any) {
-      setErr(e.message);
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "An error occurred");
     }
     setSaving(false);
   };
@@ -56,9 +61,6 @@ export const PatientProfilePage = ({
           <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0, color: C.t }}>
             My Profile
           </h1>
-          <div style={{ marginTop: 4 }}>
-            <Tag method="GET" path="/api/v1/profiles/patients/profile" />
-          </div>
         </div>
         <Btn v="ghost" sz="sm" onClick={() => setShowEdit(!showEdit)}>
           Edit Profile
@@ -117,9 +119,9 @@ export const PatientProfilePage = ({
       >
         {/* Sidebar */}
         <Card style={{ textAlign: "center" }}>
-          <Av name={`${profile?.firstName} ${profile?.lastName}`} size={64} />
+          <Av name={`${pat?.firstName} ${pat?.lastName}`} size={64} />
           <div style={{ fontWeight: 700, fontSize: 16, marginTop: 10 }}>
-            {profile?.firstName} {profile?.lastName}
+            {pat?.firstName} {pat?.lastName}
           </div>
           <div style={{ color: C.m, fontSize: 13, marginBottom: 10 }}>
             {user.email}
@@ -172,7 +174,7 @@ export const PatientProfilePage = ({
                   {k}
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>
-                  {String((profile as any)?.[k] ?? "—")}
+                  {String((pat as Record<string, unknown>)?.[k] ?? "—")}
                 </div>
               </div>
             ))}
@@ -183,9 +185,7 @@ export const PatientProfilePage = ({
                 address
               </div>
               <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>
-                {profile?.address
-                  ? `${profile.address.street}, ${profile.address.city}`
-                  : "—"}
+                {addr ? `${addr.street}, ${addr.city}` : "—"}
               </div>
             </div>
           </div>

@@ -1,10 +1,28 @@
 import { useRef, useEffect, useState } from "react";
-import { C, EP } from "./Shared";
-import { call } from "./Shared";
+import { io, Socket } from "socket.io-client";
+import { C } from "./Shared";
 import { Card, Btn, Av } from "./Shared";
+import { session } from "../session";
 import type { Coords } from "./UseLocation";
 
+const AI_SERVICE_URL =
+  import.meta.env.VITE_AI_SERVICE_URL || "http://localhost:3006";
+
 type Message = { from: "ai" | "user"; text: string; ts: Date };
+type AckResponse = {
+  type: string;
+  message?: string;
+};
+
+type TriageResponse = {
+  type: "TRIAGE_RESPONSE";
+  risk_level: "HIGH" | "MEDIUM" | "LOW";
+  content: string;
+  recommendation: {
+    rec_type: "mandatory" | "optional";
+    doctor?: { full_name: string };
+  } | null;
+};
 
 type ChatTabProps = {
   user: { id: string; name: string };
@@ -12,6 +30,18 @@ type ChatTabProps = {
   onShowResults: () => void;
   onRequestLocation: () => void;
   onPharmaciesTab: () => void;
+};
+
+const riskColor: Record<string, string> = {
+  HIGH: "#EF4444",
+  MEDIUM: "#F59E0B",
+  LOW: "#10B981",
+};
+
+const riskBg: Record<string, string> = {
+  HIGH: "#FEF2F2",
+  MEDIUM: "#FFFBEB",
+  LOW: "#ECFDF5",
 };
 
 export const ChatTab = ({
@@ -30,70 +60,100 @@ export const ChatTab = ({
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sessionId] = useState(() => `sess_${Date.now()}`);
-  const [showResults, setShowResults] = useState(false);
   const [ended, setEnded] = useState(false);
+  const [triage, setTriage] = useState<TriageResponse | null>(null);
+  const [connected, setConnected] = useState(false);
+  const [connError, setConnError] = useState("");
+
+  const socketRef = useRef<Socket | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
+  // ── Connect socket on mount ──
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    const token = session.getToken();
 
-  const send = async () => {
-    if (!input.trim() || loading) return;
-    setMessages((p) => [...p, { from: "user", text: input, ts: new Date() }]);
-    const currentInput = input;
-    setInput("");
-    setLoading(true);
+    const socket = io(AI_SERVICE_URL, {
+      auth: { token },
+      transports: ["websocket"],
+    });
 
-    try {
-      let aiText: string;
-      if (USE_MOCK) {
-        await new Promise((r) => setTimeout(r, 900));
-        const userMsgCount = messages.filter((m) => m.from === "user").length;
-        const mockFlow = [
-          "I understand. How long have you been experiencing these symptoms? Any fever, shortness of breath, or chest pain?",
-          "Thank you. Do you have any existing medical conditions or known drug allergies? Are you currently on any medication?",
-          "Got it. Based on what you've described, I recommend seeing a specialist. I've also found pharmacies near you that stock commonly prescribed drugs for this condition. Use the tabs below to explore your options.",
-        ];
-        aiText =
-          mockFlow[userMsgCount] ||
-          "I've reviewed your symptoms. Please check the Doctors and Pharmacies tabs below.";
-        if (userMsgCount >= 2) {
-          setShowResults(true);
-          setEnded(true);
-          onShowResults();
-        }
-      } else {
-        const body = {
-          message: currentInput,
-          sessionId,
-          userId: user.id,
-          ...(location && { location }),
-        };
-        const res = await call(EP.AI_CHAT, "POST", body);
-        aiText =
-          res.reply ||
-          res.data?.reply ||
-          "I'm here to help. Can you tell me more?";
-        if (res.recommendDoctors || res.showResults) {
-          setShowResults(true);
+    socketRef.current = socket;
+
+    socket.on("connect", () => {
+      setConnected(true);
+      setConnError("");
+    });
+
+    socket.on("connect_error", () => {
+      setConnError("Unable to connect to AI service. Please try again.");
+      setConnected(false);
+    });
+
+    // ── Listen for AI triage response ──
+    socket.on("patient-message", (data: TriageResponse) => {
+      if (data.type === "TRIAGE_RESPONSE") {
+        setTriage(data);
+        setMessages((p) => [
+          ...p,
+          { from: "ai", text: data.content, ts: new Date() },
+        ]);
+
+        // Show doctor/pharmacy CTAs if recommendation exists
+        if (data.recommendation) {
           setEnded(true);
           onShowResults();
         }
       }
-      setMessages((p) => [...p, { from: "ai", text: aiText, ts: new Date() }]);
-    } catch {
-      setMessages((p) => [
-        ...p,
-        {
-          from: "ai",
-          text: "I'm having trouble responding right now. Please try again shortly.",
-          ts: new Date(),
-        },
-      ]);
-    }
-    setLoading(false);
+      setLoading(false);
+    });
+
+    socket.on("disconnect", () => {
+      setConnected(false);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  // ── Auto scroll ──
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // ── Send message ──
+  const send = () => {
+    if (!input.trim() || loading || !socketRef.current) return;
+
+    const text = input.trim();
+    setMessages((p) => [...p, { from: "user", text, ts: new Date() }]);
+    setInput("");
+    setLoading(true);
+
+    const payload = {
+      type: "PATIENT_MESSAGE",
+      content: text,
+      ...(location && { location }),
+    };
+
+    socketRef.current.emit(
+      "patient-message",
+      JSON.stringify(payload),
+      (ack: AckResponse) => {
+        // Handle callback errors from server
+        if (ack?.type === "ERROR") {
+          setMessages((p) => [
+            ...p,
+            {
+              from: "ai",
+              text: ack.message || "Something went wrong. Please try again.",
+              ts: new Date(),
+            },
+          ]);
+          setLoading(false);
+        }
+      },
+    );
   };
 
   return (
@@ -101,6 +161,25 @@ export const ChatTab = ({
       style={{ display: "flex", flexDirection: "column", height: 500 }}
       p={0}
     >
+      {/* Connection status bar */}
+      {!connected && (
+        <div
+          style={{
+            padding: "6px 14px",
+            background: connError ? "#FEF2F2" : "#FFFBEB",
+            borderBottom: `1px solid ${connError ? "#FCA5A5" : "#FDE68A"}`,
+            fontSize: 12,
+            color: connError ? "#EF4444" : "#F59E0B",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          {connError ? <>⚠ {connError}</> : <>⏳ Connecting to AI service…</>}
+        </div>
+      )}
+
+      {/* Messages */}
       <div
         style={{
           flex: 1,
@@ -158,6 +237,7 @@ export const ChatTab = ({
           </div>
         ))}
 
+        {/* Typing indicator */}
         {loading && (
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <div
@@ -199,29 +279,49 @@ export const ChatTab = ({
           </div>
         )}
 
-        {showResults && (
+        {/* Triage result card */}
+        {triage && (
           <div
             style={{
-              background: C.pl,
+              background: riskBg[triage.risk_level] || C.pl,
               padding: "12px 14px",
               borderRadius: 12,
-              border: `1px solid ${C.p}`,
+              border: `1px solid ${riskColor[triage.risk_level] || C.p}`,
             }}
           >
             <div
               style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: C.p,
-                marginBottom: 8,
+                fontSize: 12,
+                fontWeight: 700,
+                color: riskColor[triage.risk_level],
+                marginBottom: 6,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
               }}
             >
-              AI has finished your assessment
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: riskColor[triage.risk_level],
+                  display: "inline-block",
+                }}
+              />
+              Risk Level: {triage.risk_level}
+              {triage.recommendation?.doctor && (
+                <span style={{ color: C.m, fontWeight: 400 }}>
+                  · Recommended: {triage.recommendation.doctor.full_name}
+                </span>
+              )}
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <Btn sz="sm" onClick={onShowResults}>
-                View Recommended Doctors
-              </Btn>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {triage.recommendation && (
+                <Btn sz="sm" onClick={onShowResults}>
+                  View Recommended Doctors
+                </Btn>
+              )}
               <Btn
                 sz="sm"
                 v="secondary"
@@ -239,6 +339,7 @@ export const ChatTab = ({
         <div ref={bottomRef} />
       </div>
 
+      {/* Input */}
       {!ended && (
         <div
           style={{
@@ -253,6 +354,7 @@ export const ChatTab = ({
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
             placeholder="Describe your symptoms…"
+            disabled={!connected}
             style={{
               flex: 1,
               padding: "10px 14px",
@@ -260,12 +362,13 @@ export const ChatTab = ({
               border: `1.5px solid ${C.b}`,
               fontSize: 14,
               fontFamily: "inherit",
-              background: C.bg,
+              background: connected ? C.bg : "#F9FAFB",
               outline: "none",
               color: C.t,
+              opacity: connected ? 1 : 0.6,
             }}
           />
-          <Btn onClick={send} disabled={!input.trim() || loading}>
+          <Btn onClick={send} disabled={!input.trim() || loading || !connected}>
             Send
           </Btn>
         </div>

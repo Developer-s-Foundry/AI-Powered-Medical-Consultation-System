@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { C, EP } from "./Shared";
-import { call } from "./Shared";
-import { Card, Btn, Inp, Inp as InpField, Alrt, Spin, Tbl } from "./Shared";
+import { C } from "./Shared";
+import { EP } from "../config";
+import { call } from "../api";
+import { Card, Btn, Inp as InpField, Alrt, Spin, Tbl } from "./Shared";
 import { SBdg } from "./Shared";
 
 type Drug = {
@@ -87,8 +88,8 @@ export const DoctorRxPage = () => {
       setShowForm(false);
       setOk("Prescription issued!");
       setF(emptyForm);
-    } catch (e: any) {
-      setErr(e.message);
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "An error occurred");
     }
     setSaving(false);
   };
@@ -237,9 +238,10 @@ export const DoctorRxPage = () => {
             },
             { k: "diagnosis" },
             {
-              k: "drug",
+              k: "items" as const,
               r: (r) => {
-                const d = drugMap[r.items?.[0]?.drugId];
+                const drugId = r.items?.[0]?.drugId;
+                const d = drugId ? drugMap[drugId] : undefined;
                 return d ? `${d.medicineName} ${d.dosage}` : "—";
               },
             },

@@ -1,19 +1,43 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { C, EP } from "./Shared";
-import { call } from "./Shared";
+import { C } from "./Shared";
+import { EP } from "../config";
+import { call } from "../api";
 import { Card, Btn, Bdg, Hr, StatCard } from "./Shared";
 import { SBdg } from "./Shared";
-import type { AuthUser } from "./Shared";
+import type { AuthUser } from "../types";
 
 type DoctorDashboardProps = {
   user: AuthUser;
-  profile: any;
+  profile: {
+    firstName?: string;
+    lastName?: string;
+    specialty?: string;
+    hospitalName?: string;
+    phone?: string;
+    consultationFee?: number;
+    address?: {
+      street: string;
+      city: string;
+      state: string;
+      country: string;
+    };
+    [key: string]: unknown;
+  };
 };
 
-export const DoctorDashboard = ({ user, profile }: DoctorDashboardProps) => {
+type Appointment = {
+  id: string;
+  patientName?: string;
+  date?: string;
+  time?: string;
+  status?: string;
+  reason?: string;
+};
+
+export const DoctorDashboard = ({ profile }: DoctorDashboardProps) => {
   const navigate = useNavigate();
-  const [appointments, setAppointments] = useState([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
 
   useEffect(() => {
     call(EP.DOCTOR_APPOINTMENTS)
@@ -49,7 +73,11 @@ export const DoctorDashboard = ({ user, profile }: DoctorDashboardProps) => {
           marginBottom: 20,
         }}
       >
-        <StatCard icon="🩺" label="specialty" value={profile.specialty} />
+        <StatCard
+          icon="🩺"
+          label="specialty"
+          value={profile.specialty ?? "-"}
+        />
         <StatCard
           icon=""
           label="yearsOfExperience"
@@ -62,7 +90,7 @@ export const DoctorDashboard = ({ user, profile }: DoctorDashboardProps) => {
         <StatCard
           icon=""
           label="hospital"
-          value={profile.hospitalName}
+          value={profile.hospitalName ?? "-"}
           c={C.pu}
           bg={C.pul}
         />
@@ -116,7 +144,7 @@ export const DoctorDashboard = ({ user, profile }: DoctorDashboardProps) => {
               No appointments today.
             </div>
           )}
-          {appointments.map((apt: any, i: number) => (
+          {appointments.map((apt, i: number) => (
             <div
               key={i}
               style={{

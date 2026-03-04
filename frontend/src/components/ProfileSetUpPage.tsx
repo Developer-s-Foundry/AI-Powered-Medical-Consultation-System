@@ -1,13 +1,32 @@
 import { useState, useEffect } from "react";
-import { C, EP } from "./Shared";
-import { call } from "./Shared";
+import { C } from "./Shared";
+import { EP } from "../config";
+import { call } from "../api";
 import { Card, Btn, Inp, Sel, Alrt, Spin, Tag } from "./Shared";
-import type { AuthUser } from "./Shared";
+import type { AuthUser, OperationDays, Profile } from "../types";
 
 type ProfileSetupPageProps = {
   user: AuthUser;
-  onComplete: (profile: any) => void;
+  onComplete: (profile: Profile) => void;
 };
+
+const DAYS = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+];
+
+const defaultOperationDays = (): OperationDays =>
+  Object.fromEntries(
+    DAYS.map((d) => [
+      d,
+      { isAvailable: false, startTime: "08:00", endTime: "18:00" },
+    ]),
+  );
 
 const endpointMap = {
   patient: "/api/v1/profiles/patients/profile",
@@ -46,14 +65,14 @@ export const ProfileSetupPage = ({
     licenseNumber: "",
     yearsOfExperience: "",
     hospitalName: "",
-    consultationFee: "",
+    consultationFee: "0",
   });
 
   const [phf, setPhf] = useState({
     pharmacyName: "",
     phone: "",
     licenseNumber: "",
-    operatingHours: "",
+    operationDays: defaultOperationDays(),
     address: {
       street: "",
       city: "",
@@ -63,13 +82,11 @@ export const ProfileSetupPage = ({
     },
   });
 
-  // Auto-populate coordinates via geolocation
   useEffect(() => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        console.log("GEO SUCCESS:", coords.lat, coords.lng);
         setPf((p) => ({
           ...p,
           address: { ...p.address, coordinates: coords },
@@ -83,13 +100,38 @@ export const ProfileSetupPage = ({
     );
   }, []);
 
+  const toggleDay = (day: string) => {
+    setPhf((p) => ({
+      ...p,
+      operationDays: {
+        ...p.operationDays,
+        [day]: {
+          ...p.operationDays[day],
+          isAvailable: !p.operationDays[day].isAvailable,
+        },
+      },
+    }));
+  };
+
+  const updateDayTime = (
+    day: string,
+    field: "startTime" | "endTime",
+    value: string,
+  ) => {
+    setPhf((p) => ({
+      ...p,
+      operationDays: {
+        ...p.operationDays,
+        [day]: { ...p.operationDays[day], [field]: value },
+      },
+    }));
+  };
+
   const save = async () => {
-    console.log("user.role:", user.role);
     setSaving(true);
     setErr("");
-
     try {
-      let body: any;
+      let body: Record<string, unknown>;
       let endpoint: string;
 
       if (user.role === "patient") {
@@ -99,16 +141,7 @@ export const ProfileSetupPage = ({
           phone: pf.phone,
           dateOfBirth: pf.dateOfBirth,
           gender: pf.gender,
-          address: {
-            street: pf.address.street,
-            city: pf.address.city,
-            state: pf.address.state,
-            country: pf.address.country,
-            coordinates: {
-              lat: pf.address.coordinates.lat,
-              lng: pf.address.coordinates.lng,
-            },
-          },
+          address: pf.address,
         };
         endpoint = EP.PROFILE_PATIENT;
       } else if (user.role === "doctor") {
@@ -120,38 +153,31 @@ export const ProfileSetupPage = ({
           specialty: df.specialty,
           hospitalName: df.hospitalName,
           yearsOfExperience: df.yearsOfExperience,
-          consultationFee: df.consultationFee,
+          consultationFee: Number(df.consultationFee),
         };
-        console.log("Doctor body:", JSON.stringify(body, null, 2));
         endpoint = EP.PROFILE_DOCTOR;
       } else {
         body = {
           pharmacyName: phf.pharmacyName,
           phone: phf.phone,
           lincenseNumber: phf.licenseNumber,
-          address: {
-            street: phf.address.street,
-            city: phf.address.city,
-            state: phf.address.state,
-            country: phf.address.country,
-            coordinates: {
-              lat: phf.address.coordinates.lat,
-              lng: phf.address.coordinates.lng,
-            },
-          },
+          operationDays: phf.operationDays,
+          address: phf.address,
         };
-        console.log("PHARMACY BODY:", JSON.stringify(body, null, 2));
         endpoint = EP.PROFILE_PHARMACY;
       }
 
-      console.log("FINAL BODY:", JSON.stringify(body, null, 2));
       const res = await call(endpoint, "POST", body);
       onComplete(res.data || res);
-    } catch (e: any) {
-      setErr(e.message);
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "An error occurred");
     }
     setSaving(false);
   };
+
+  const hasAvailableDay = Object.values(phf.operationDays).some(
+    (d) => d.isAvailable,
+  );
 
   const isValid =
     user.role === "patient"
@@ -166,6 +192,7 @@ export const ProfileSetupPage = ({
         : phf.pharmacyName &&
           phf.phone &&
           phf.licenseNumber &&
+          hasAvailableDay &&
           phf.address.street &&
           phf.address.city &&
           phf.address.state &&
@@ -327,67 +354,196 @@ export const ProfileSetupPage = ({
 
         {/* ── Pharmacy Form ── */}
         {user.role === "pharmacy" && (
-          <div
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
-          >
-            {(
-              [
-                "pharmacyName",
-                "licenseNumber",
-                "phone",
-                "operatingHours",
-              ] as const
-            ).map((k) => (
-              <Inp
-                key={k}
-                label={k}
-                value={phf[k] as string}
-                onChange={(v) => setPhf((p) => ({ ...p, [k]: v }))}
-              />
-            ))}
-            <Inp
-              label="Street"
-              value={phf.address.street}
-              onChange={(v) =>
-                setPhf((p) => ({ ...p, address: { ...p.address, street: v } }))
-              }
-            />
-            <Inp
-              label="City"
-              value={phf.address.city}
-              onChange={(v) =>
-                setPhf((p) => ({ ...p, address: { ...p.address, city: v } }))
-              }
-            />
-            <Inp
-              label="State"
-              value={phf.address.state}
-              onChange={(v) =>
-                setPhf((p) => ({ ...p, address: { ...p.address, state: v } }))
-              }
-            />
-            <Inp
-              label="Country"
-              value={phf.address.country}
-              onChange={(v) =>
-                setPhf((p) => ({ ...p, address: { ...p.address, country: v } }))
-              }
-              placeholder="Nigeria"
-            />
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div
               style={{
-                gridColumn: "1 / -1",
-                fontSize: 12,
-                color: C.m,
-                padding: "6px 10px",
-                background: C.bg,
-                borderRadius: 6,
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 12,
               }}
             >
-              Coordinates:{" "}
-              {phf.address.coordinates?.lat
-                ? `${phf.address.coordinates.lat.toFixed(4)}, ${phf.address.coordinates.lng.toFixed(4)}`
-                : "Requesting location..."}
+              <Inp
+                label="Pharmacy Name"
+                value={phf.pharmacyName}
+                onChange={(v) => setPhf((p) => ({ ...p, pharmacyName: v }))}
+              />
+              <Inp
+                label="License Number"
+                value={phf.licenseNumber}
+                onChange={(v) => setPhf((p) => ({ ...p, licenseNumber: v }))}
+              />
+              <Inp
+                label="Phone"
+                value={phf.phone}
+                onChange={(v) => setPhf((p) => ({ ...p, phone: v }))}
+                placeholder="+2348011111111"
+              />
+              <Inp
+                label="Street"
+                value={phf.address.street}
+                onChange={(v) =>
+                  setPhf((p) => ({
+                    ...p,
+                    address: { ...p.address, street: v },
+                  }))
+                }
+              />
+              <Inp
+                label="City"
+                value={phf.address.city}
+                onChange={(v) =>
+                  setPhf((p) => ({ ...p, address: { ...p.address, city: v } }))
+                }
+              />
+              <Inp
+                label="State"
+                value={phf.address.state}
+                onChange={(v) =>
+                  setPhf((p) => ({ ...p, address: { ...p.address, state: v } }))
+                }
+              />
+              <Inp
+                label="Country"
+                value={phf.address.country}
+                onChange={(v) =>
+                  setPhf((p) => ({
+                    ...p,
+                    address: { ...p.address, country: v },
+                  }))
+                }
+                placeholder="Nigeria"
+              />
+              <div
+                style={{
+                  fontSize: 12,
+                  color: C.m,
+                  padding: "6px 10px",
+                  background: C.bg,
+                  borderRadius: 6,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                📍{" "}
+                {phf.address.coordinates?.lat
+                  ? `${phf.address.coordinates.lat.toFixed(4)}, ${phf.address.coordinates.lng.toFixed(4)}`
+                  : "Requesting location..."}
+              </div>
+            </div>
+
+            {/* Operation Days */}
+            <div>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: C.t,
+                  fontFamily: "monospace",
+                  marginBottom: 8,
+                }}
+              >
+                operationDays{" "}
+                <span style={{ color: C.m, fontWeight: 400 }}>
+                  — select days and hours
+                </span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {DAYS.map((day) => {
+                  const slot = phf.operationDays[day];
+                  return (
+                    <div
+                      key={day}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "8px 12px",
+                        borderRadius: 8,
+                        border: `1.5px solid ${slot.isAvailable ? C.p : C.b}`,
+                        background: slot.isAvailable ? C.pl : C.s,
+                      }}
+                    >
+                      <button
+                        onClick={() => toggleDay(day)}
+                        style={{
+                          width: 36,
+                          height: 20,
+                          borderRadius: 10,
+                          border: "none",
+                          cursor: "pointer",
+                          background: slot.isAvailable ? C.p : C.b,
+                          position: "relative",
+                          flexShrink: 0,
+                          transition: "background 0.2s",
+                        }}
+                      >
+                        <span
+                          style={{
+                            position: "absolute",
+                            top: 2,
+                            left: slot.isAvailable ? 18 : 2,
+                            width: 16,
+                            height: 16,
+                            borderRadius: "50%",
+                            background: "#fff",
+                            transition: "left 0.2s",
+                          }}
+                        />
+                      </button>
+                      <span
+                        style={{
+                          width: 90,
+                          fontSize: 13,
+                          fontWeight: slot.isAvailable ? 700 : 400,
+                          color: slot.isAvailable ? C.p : C.m,
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        {day}
+                      </span>
+                      {slot.isAvailable && (
+                        <>
+                          <input
+                            type="time"
+                            value={slot.startTime}
+                            onChange={(e) =>
+                              updateDayTime(day, "startTime", e.target.value)
+                            }
+                            style={{
+                              padding: "4px 8px",
+                              borderRadius: 6,
+                              border: `1px solid ${C.b}`,
+                              fontSize: 12,
+                              fontFamily: "inherit",
+                              background: C.s,
+                              color: C.t,
+                              outline: "none",
+                            }}
+                          />
+                          <span style={{ fontSize: 12, color: C.m }}>to</span>
+                          <input
+                            type="time"
+                            value={slot.endTime}
+                            onChange={(e) =>
+                              updateDayTime(day, "endTime", e.target.value)
+                            }
+                            style={{
+                              padding: "4px 8px",
+                              borderRadius: 6,
+                              border: `1px solid ${C.b}`,
+                              fontSize: 12,
+                              fontFamily: "inherit",
+                              background: C.s,
+                              color: C.t,
+                              outline: "none",
+                            }}
+                          />
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}

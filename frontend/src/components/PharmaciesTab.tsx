@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { C, EP } from "./Shared";
-import { call } from "./Shared";
+import { C } from "./Shared";
+import { call } from "../api";
+import { EP } from "../config";
 import { Card, Btn, Bdg, Hr, Tag } from "./Shared";
 import { haversine, fmtDist } from "./Geo";
 import type { Coords, LocStatus } from "./UseLocation";
+import type { NearbyPharmacy } from "../types";
 
 type PharmaciesTabProps = {
   location: Coords | null;
@@ -33,10 +35,12 @@ export const PharmaciesTab = ({
       });
       const res = await call(`${EP.PHARM_NEARBY}?${params}`);
       setNearbyPharms(
-        (res.data?.pharmacies || res.pharmacies || []).map((ph: any) => ({
-          ...ph,
-          distance: haversine(coords.lat, coords.lng, ph.lat, ph.lng),
-        })),
+        (res.data?.pharmacies || res.pharmacies || []).map(
+          (ph: NearbyPharmacy) => ({
+            ...ph,
+            distance: haversine(coords.lat, coords.lng, ph.lat, ph.lng),
+          }),
+        ),
       );
     } catch {
       setNearbyPharms([]);
@@ -310,11 +314,11 @@ export const PharmaciesTab = ({
                   <Hr my={10} />
                   <div style={{ display: "flex", gap: 8 }}>
                     <Btn sz="sm">Get Directions</Btn>
-                    <Btn sz="sm" v="secondary">
+                    <Btn sz="sm" v="secondary" onClick={() => {}}>
                       📞 Call Pharmacy
                     </Btn>
                     {ph.deliveryAvailable && (
-                      <Btn sz="sm" v="ghost">
+                      <Btn sz="sm" v="ghost" onClick={() => {}}>
                         🛵 Request Delivery
                       </Btn>
                     )}

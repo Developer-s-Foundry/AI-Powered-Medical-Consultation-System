@@ -6,6 +6,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { useState } from "react";
+import type { AuthUser, Profile } from "./types";
 
 // All your components from the barrel
 import {
@@ -28,9 +29,9 @@ import {
 
 // Your existing shell, constants, types, utils
 import { Shell } from "./components/Shared";
-import { C, EP } from "./components/Shared";
-import { call } from "./components/Shared";
-import type { AuthUser, Profile } from "./types";
+import { C } from "./components/Shared";
+import { EP } from "./config";
+import { call } from "./api";
 
 // ════════════════════════════════════════════════════════════════════════════
 // APP ROOT
@@ -62,7 +63,7 @@ export default function App() {
 
   const onLogin = async (
     u: AuthUser,
-    navigate: (path: string, option?: any) => void,
+    navigate: (path: string, option?: { replace?: boolean }) => void,
   ) => {
     localStorage.setItem("user", JSON.stringify(u));
     setUser(u);
@@ -98,8 +99,8 @@ export default function App() {
 
       // 3. Only one navigate call, using module-level `home`
       navigate(home[u.role] || "/patient-dashboard", { replace: true });
-    } catch (e: any) {
-      console.log("Profile fetch error:", e.message);
+    } catch (e: unknown) {
+      console.log("Profile fetch error:", (e as Error).message);
       setProfile(null);
       navigate("/profile-setup");
     } finally {
@@ -123,7 +124,7 @@ export default function App() {
   // WRAPPER COMPONENT FOR LOGIN PAGE
   function LoginWrapper() {
     const navigate = useNavigate();
-    return <AuthPage onLogin={(u) => onLogin(u, navigate)} />;
+    return <AuthPage onLogin={(u: AuthUser) => onLogin(u, navigate)} />;
   }
 
   // WRAPPER COMPONENT FOR PROFILE SETUP PAGE
@@ -169,7 +170,7 @@ export default function App() {
           path="/patient-dashboard"
           element={
             user && profile ? (
-              <Shell user={user} notifCount={0}>
+              <Shell user={user} notifCount={0} page="patient-dashboard">
                 <PatientProfilePage user={user} profile={profile} />
               </Shell>
             ) : (
@@ -181,7 +182,7 @@ export default function App() {
           path="/doctor-dashboard"
           element={
             user && profile ? (
-              <Shell user={user} notifCount={0}>
+              <Shell user={user} notifCount={0} page="doctor-dashboard">
                 <DoctorDashboard user={user} profile={profile} />
               </Shell>
             ) : (
@@ -193,7 +194,7 @@ export default function App() {
           path="/pharmacy-dashboard"
           element={
             user && profile ? (
-              <Shell user={user} notifCount={0}>
+              <Shell user={user} notifCount={0} page="pharmacy-dashboard">
                 <PharmacyDashboard user={user} profile={profile} />
               </Shell>
             ) : (
@@ -205,7 +206,7 @@ export default function App() {
           path="/find-doctors"
           element={
             user ? (
-              <Shell user={user} notifCount={0}>
+              <Shell user={user} notifCount={0} page="find-doctors">
                 <FindDoctorsPage />
               </Shell>
             ) : (
@@ -217,7 +218,7 @@ export default function App() {
           path="/appointments"
           element={
             user ? (
-              <Shell user={user} notifCount={0}>
+              <Shell user={user} notifCount={0} page="appointments">
                 <AppointmentsPage />
               </Shell>
             ) : (
@@ -229,7 +230,7 @@ export default function App() {
           path="/ai-chat"
           element={
             user ? (
-              <Shell user={user} notifCount={0}>
+              <Shell user={user} notifCount={0} page="ai-chat">
                 <AIChatPage user={user} onBook={() => {}} />
               </Shell>
             ) : (
@@ -241,7 +242,7 @@ export default function App() {
           path="/payments"
           element={
             user ? (
-              <Shell user={user} notifCount={0}>
+              <Shell user={user} notifCount={0} page="payments">
                 <PaymentsPage user={user} />
               </Shell>
             ) : (
@@ -253,7 +254,7 @@ export default function App() {
           path="/notifications"
           element={
             user ? (
-              <Shell user={user} notifCount={0}>
+              <Shell user={user} notifCount={0} page="notifications">
                 <NotificationsPage user={user} />
               </Shell>
             ) : (
@@ -265,7 +266,7 @@ export default function App() {
           path="/prescriptions-patient"
           element={
             user ? (
-              <Shell user={user} notifCount={0}>
+              <Shell user={user} notifCount={0} page="prescription-patient">
                 <PatientRxPage />
               </Shell>
             ) : (
@@ -277,7 +278,7 @@ export default function App() {
           path="/prescriptions-doctor"
           element={
             user ? (
-              <Shell user={user} notifCount={0}>
+              <Shell user={user} notifCount={0} page="prescription-doctor">
                 <DoctorRxPage />
               </Shell>
             ) : (
@@ -289,7 +290,7 @@ export default function App() {
           path="/doctor-payments"
           element={
             user ? (
-              <Shell user={user} notifCount={0}>
+              <Shell user={user} notifCount={0} page="doctor-payments">
                 <DoctorPaymentsPage user={user} />
               </Shell>
             ) : (
@@ -301,7 +302,7 @@ export default function App() {
           path="/manage-drugs"
           element={
             user ? (
-              <Shell user={user} notifCount={0}>
+              <Shell user={user} notifCount={0} page="manage-drugs">
                 <ManageDrugsPage />
               </Shell>
             ) : (
@@ -313,7 +314,7 @@ export default function App() {
           path="/rx-queue"
           element={
             user ? (
-              <Shell user={user} notifCount={0}>
+              <Shell user={user} notifCount={0} page="rx-queue">
                 <RxQueuePage />
               </Shell>
             ) : (
