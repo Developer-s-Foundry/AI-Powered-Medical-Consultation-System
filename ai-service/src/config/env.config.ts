@@ -32,5 +32,6 @@ export const config = {
     REDIS_HOST: getenv(environment_variables.REDIS_HOST),
     REDIS_PORT: getenv(environment_variables.REDIS_PORT),
     REDIS_PASSWORD: getenv(environment_variables.REDIS_PASSWORD),
-    REDIS_DB: getenv(environment_variables.REDIS_DB)
+    REDIS_DB: getenv(environment_variables.REDIS_DB),
+    SOCKET_JWT_SECRET: getenv(environment_variables.SOCKET_JWT_SECRET)
 }

@@ -19,11 +19,17 @@ export class NotificationController {
       res.json({ success: true, data: result }); // { rows, count }
     } catch (error) {
       logger.error("Error fetching notifications:", error);
+<<<<<<< HEAD
+      res
+        .status(500)
+        .json({ success: false, message: "Failed to fetch notifications" });
+=======
       res.status(500).json({
         success: false,
         message: (error as Error).message,
         stack: (error as Error).stack,
       });
+>>>>>>> main
     }
   };
 
