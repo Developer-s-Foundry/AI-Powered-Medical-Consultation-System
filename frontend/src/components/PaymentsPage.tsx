@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { C, EP } from "./Shared";
-import { call } from "./Shared";
+import { C } from "./Shared";
+import { call } from "../api";
+import { EP } from "../config";
 import {
   Card,
   Btn,

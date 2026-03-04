@@ -1,40 +1,55 @@
 import { useState, useEffect } from "react";
-import { C, EP } from "./Shared";
-import { call } from "./Shared";
+import { C } from "./Shared";
+import { EP } from "../config";
+import { call } from "../api";
 import { Card, Btn, Inp, Alrt, Spin, Bdg, Tbl } from "./Shared";
 
+type Drug = {
+  id: string;
+  medicineName: string;
+  dosage: string;
+  manufacturer: string;
+  quantity: number;
+  price: number;
+  expiryDate: string;
+  description?: string;
+  requiresPrescription: boolean;
+};
+
+type DrugForm = {
+  medicineName: string;
+  dosage: string;
+  manufacturer: string;
+  quantity: string;
+  price: string;
+  expiryDate: string;
+  description: string;
+  requiresPrescription: boolean;
+};
+
+const emptyForm: DrugForm = {
+  medicineName: "",
+  dosage: "",
+  manufacturer: "",
+  quantity: "",
+  price: "",
+  expiryDate: "",
+  description: "",
+  requiresPrescription: true,
+};
+
 export const ManageDrugsPage = () => {
-  const [drugs, setDrugs] = useState([]);
+  const [drugs, setDrugs] = useState<Drug[]>([]);
   const [q, setQ] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [ok, setOk] = useState("");
   const [err, setErr] = useState("");
-  const [f, setF] = useState({
-    medicineName: "",
-    dosage: "",
-    manufacturer: "",
-    quantity: "",
-    price: "",
-    expiryDate: "",
-    description: "",
-    requiresPrescription: true,
-  });
-
-  const emptyForm = {
-    medicineName: "",
-    dosage: "",
-    manufacturer: "",
-    quantity: "",
-    price: "",
-    expiryDate: "",
-    description: "",
-    requiresPrescription: true,
-  };
+  const [f, setF] = useState<DrugForm>(emptyForm);
 
   useEffect(() => {
     call(`${EP.DRUG_SEARCH}?medicineName=`)
-      .then((r) => setDrugs(r.data?.drugs || r.drugs || []))
+      .then((r) => setDrugs(r.data?.drugs || []))
       .catch(() => setDrugs([]));
   }, []);
 
@@ -48,12 +63,12 @@ export const ManageDrugsPage = () => {
     };
     try {
       const res = await call(EP.DRUG_CREATE, "POST", body);
-      setDrugs((p: any) => [res.data || res, ...p]);
+      setDrugs((p) => [res.data, ...p]);
       setShowForm(false);
       setOk("Drug added!");
       setF(emptyForm);
-    } catch (e: any) {
-      setErr(e.message);
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "An error occurred");
     }
     setSaving(false);
   };
@@ -210,31 +225,25 @@ export const ManageDrugsPage = () => {
         )}
         <Tbl
           cols={[
-            {
-              k: "medicineName",
-              r: (r: any) => <strong>{r.medicineName}</strong>,
-            },
+            { k: "medicineName", r: (r) => <strong>{r.medicineName}</strong> },
             { k: "dosage" },
             { k: "manufacturer" },
             {
               k: "quantity",
-              r: (r: any) => (
+              r: (r) => (
                 <span style={{ color: r.quantity < 50 ? C.d : C.t }}>
                   {r.quantity}
                 </span>
               ),
             },
-            {
-              k: "price",
-              r: (r: any) => `₦${Number(r.price).toLocaleString()}`,
-            },
+            { k: "price", r: (r) => `₦${Number(r.price).toLocaleString()}` },
             {
               k: "expiryDate",
-              r: (r: any) => new Date(r.expiryDate).toLocaleDateString(),
+              r: (r) => new Date(r.expiryDate).toLocaleDateString(),
             },
             {
               k: "requiresPrescription",
-              r: (r: any) => (
+              r: (r) => (
                 <Bdg
                   c={r.requiresPrescription ? C.pu : C.g}
                   bg={r.requiresPrescription ? C.pul : C.gl}

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { C, EP } from "./Shared";
-import { Card, Btn, Tag } from "./Shared";
+import { C } from "./Shared";
+import { Card, Btn } from "./Shared";
 import { useLocation } from "./UseLocation";
 import { ChatTab } from "./ChatTab";
 import { DoctorsTab } from "./DoctorsTab";
@@ -8,13 +8,11 @@ import { PharmaciesTab } from "./PharmaciesTab";
 
 type AIChatPageProps = {
   user: { id: string; name: string };
-  onBook?: (doc: any) => void;
+  onBook?: (doc: Record<string, unknown>) => void;
 };
 
 export const AIChatPage = ({ user, onBook }: AIChatPageProps) => {
   const [activeTab, setActiveTab] = useState("chat");
-  const [showResults, setShowResults] = useState(false);
-  const [pharmCount, setPharmCount] = useState(0);
 
   const {
     location,
@@ -25,14 +23,12 @@ export const AIChatPage = ({ user, onBook }: AIChatPageProps) => {
     showManual,
     requestLocation,
     useManualAddress,
-  } = useLocation((_coords) => {
-    // Called when location is granted — could trigger pharmacy fetch here if needed
-  });
+  } = useLocation(() => {});
 
   const tabs = [
     { id: "chat", label: "💬 Chat" },
-    { id: "doctors", label: `🩺 Doctors` },
-    { id: "pharmacies", label: `🏪 Pharmacies` },
+    { id: "doctors", label: "🩺 Doctors" },
+    { id: "pharmacies", label: "🏪 Pharmacies" },
   ];
 
   return (
@@ -87,19 +83,20 @@ export const AIChatPage = ({ user, onBook }: AIChatPageProps) => {
           }}
         >
           <div>
-            <strong style={{ color: C.g }}>POST</strong> {EP.AI_CHAT}
+            <strong style={{ color: C.p }}>WS</strong> AI Chat (socket.io){" "}
+            <span style={{ color: C.m }}>→ patient-message</span>
           </div>
           <div>
-            <strong style={{ color: C.g }}>POST</strong> {EP.AI_SYMPTOM}
+            <strong style={{ color: C.p }}>WS</strong> Triage Response{" "}
+            <span style={{ color: C.m }}>← TRIAGE_RESPONSE</span>
           </div>
           <div>
-            <strong style={{ color: C.g }}>POST</strong> {EP.AI_RECOMMEND}
+            <strong style={{ color: C.g }}>GET</strong>{" "}
+            /api/v1/profiles/doctors/search
           </div>
           <div>
-            <strong style={{ color: C.g }}>POST</strong> {EP.AI_PHARM_MATCH}
-          </div>
-          <div>
-            <strong style={{ color: C.g }}>GET</strong> {EP.PHARM_NEARBY}
+            <strong style={{ color: C.g }}>GET</strong>{" "}
+            /api/v1/profiles/pharmacies/nearby
           </div>
         </div>
       </div>
@@ -120,13 +117,6 @@ export const AIChatPage = ({ user, onBook }: AIChatPageProps) => {
           <h1 style={{ fontSize: 20, fontWeight: 800, color: C.t, margin: 0 }}>
             AI Medical Assistant
           </h1>
-          <div
-            style={{ marginTop: 4, display: "flex", gap: 6, flexWrap: "wrap" }}
-          >
-            <Tag method="POST" path="/api/ai/chat" />
-            <Tag method="POST" path="/api/ai/pharmacy-match" />
-            <Tag method="GET" path="/api/profile/pharmacies/nearby" />
-          </div>
         </div>
 
         {/* Location pill */}

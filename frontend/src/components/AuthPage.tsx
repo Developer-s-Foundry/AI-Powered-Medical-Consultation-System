@@ -1,9 +1,10 @@
 import { useState } from "react";
 import type { AuthPageProps, AuthUser } from "./Shared";
-import { C, EP, GATEWAY } from "./Shared";
+import { EP, GATEWAY } from "../config";
 import { session } from "../session";
-import { call } from "./Shared";
-import { Card, Inp, Btn, Alrt, Spin, Tag } from "./Shared";
+import { C } from "./Shared";
+import { call } from "../api";
+import { Card, Inp, Btn, Alrt, Spin } from "./Shared";
 
 type AuthAction = "login" | "register" | "forgot" | "reset";
 
@@ -29,7 +30,7 @@ export const AuthPage = ({ onLogin }: AuthPageProps) => {
         console.log("LOGIN RESPONSE:", JSON.stringify(res, null, 2));
         if (res.accessToken) session.setToken(res.accessToken);
         onLogin({
-          id: res.id,
+          id: res.user.id || res.user.userId,
           name: email.split("@")[0],
           email,
           role: res.user.role as AuthUser["role"],
@@ -45,7 +46,7 @@ export const AuthPage = ({ onLogin }: AuthPageProps) => {
         if (!res.accessToken) throw new Error("No token returned from server");
         session.setToken(res.accessToken);
         onLogin({
-          id: res.id,
+          id: res.user?.id || res.user?.userId || res.id,
           name: email.split("@")[0],
           email,
           role: role as AuthUser["role"],
@@ -54,7 +55,7 @@ export const AuthPage = ({ onLogin }: AuthPageProps) => {
       } else if (action === "forgot") {
         try {
           await call(EP.AUTH_FORGOT, "POST", { email });
-        } catch (_e) {
+        } catch {
           // Security: show same message regardless
         }
         setOk("If that email exists, a reset link has been sent.");
@@ -67,8 +68,8 @@ export const AuthPage = ({ onLogin }: AuthPageProps) => {
         setOk("Password reset! You can now sign in.");
         setTimeout(() => setTab("login"), 1500);
       }
-    } catch (e: any) {
-      setErr(e.message);
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "An error occurred");
     }
 
     setLoading(false);

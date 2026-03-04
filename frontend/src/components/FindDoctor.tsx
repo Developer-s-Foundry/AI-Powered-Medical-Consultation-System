@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { C, EP } from "./Shared";
-import { call } from "./Shared";
+import { C } from "./Shared";
+import { EP } from "../config";
+import { call } from "../api";
 import { Card, Btn, Inp, Av, Bdg, Hr, Tag } from "./Shared";
 
 type Doctor = {
@@ -65,7 +66,7 @@ export const FindDoctorsPage = () => {
     setSelectedDoc(doc as DoctorProfile); // show immediately with list data
     setLoadingProfile(true);
     try {
-      const r = await call(EP.DOCTOR_PROFILE(doc.userId));
+      const r = await call(EP.PROFILE_GET_DOCTOR_BY_ID(doc.userId));
       setSelectedDoc(r.data || r); // update with full profile from getProfileById
     } catch {
       // keep showing list data if full fetch fails

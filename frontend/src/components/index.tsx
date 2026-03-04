@@ -31,5 +31,7 @@ export { DoctorsTab } from "./DoctorsTab";
 export { PharmaciesTab } from "./PharmaciesTab";
 
 // Utils
+/* eslint-disable-next-line react-refresh/only-export-components */
 export { useLocation } from "./UseLocation";
+/* eslint-disable-next-line react-refresh/only-export-components */
 export { haversine, fmtDist } from "./Geo";

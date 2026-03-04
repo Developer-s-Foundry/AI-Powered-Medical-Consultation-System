@@ -1,11 +1,33 @@
 import { useState, useEffect } from "react";
-import { C, EP } from "./Shared";
-import { call } from "./Shared";
+import { C } from "./Shared";
+import { EP } from "../config";
+import { call } from "../api";
 import { Card, Av, Tag } from "./Shared";
 import { SBdg } from "./Shared";
 
+interface PrescriptionItem {
+  id: string;
+  medicineName?: string;
+  drugId?: string;
+  dosage: string;
+  duration: string;
+  quantityPrescribed: number;
+}
+
+interface Prescription {
+  id: string;
+  doctorName?: string;
+  doctorId: string;
+  specialty?: string;
+  createdAt: string;
+  status: string;
+  diagnosis: string;
+  instructions?: string;
+  items?: PrescriptionItem[];
+}
+
 export const PatientRxPage = () => {
-  const [rxs, setRxs] = useState([]);
+  const [rxs, setRxs] = useState<Prescription[]>([]);
 
   useEffect(() => {
     call(EP.RX_VIEW)
@@ -33,7 +55,7 @@ export const PatientRxPage = () => {
             No prescriptions found.
           </div>
         )}
-        {rxs.map((rx: any) => (
+        {rxs.map((rx) => (
           <Card key={rx.id}>
             <div
               style={{
@@ -78,7 +100,7 @@ export const PatientRxPage = () => {
               )}
             </div>
 
-            {rx.items?.map((item: any) => (
+            {rx.items?.map((item) => (
               <div
                 key={item.id}
                 style={{
