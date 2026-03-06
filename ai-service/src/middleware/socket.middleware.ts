@@ -5,7 +5,7 @@ import { config } from "../config/env.config";
 
 export function socketAuthMiddleware(
   socket: Socket,
-  next: (err?: Error) => void
+  next: (err?: Error) => void,
 ) {
   const token = socket.handshake.auth.token;
 
@@ -17,8 +17,8 @@ export function socketAuthMiddleware(
     const payload: any = jwt.verify(token, config.SOCKET_JWT_SECRET);
 
     // Attach verified identity to socket session
-    socket.data.userId = payload.id;
-    socket.data.role = payload.role; 
+    socket.data.userId = payload.userId;
+    socket.data.role = payload.role;
 
     next();
   } catch (err) {

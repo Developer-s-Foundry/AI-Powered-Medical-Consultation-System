@@ -6,7 +6,7 @@ import { session } from "../session";
 import type { Coords } from "./UseLocation";
 
 const AI_SERVICE_URL =
-  import.meta.env.VITE_AI_SERVICE_URL || "http://localhost:3006";
+  import.meta.env.VITE_AI_SERVICE_URL || "http://localhost:2026";
 
 type Message = { from: "ai" | "user"; text: string; ts: Date };
 type AckResponse = {
@@ -90,7 +90,7 @@ export const ChatTab = ({
     });
 
     // ── Listen for AI triage response ──
-    socket.on("patient-message", (data: TriageResponse) => {
+    socket.on("TRIAGE_RESPONSE", (data: TriageResponse) => {
       if (data.type === "TRIAGE_RESPONSE") {
         setTriage(data);
         setMessages((p) => [

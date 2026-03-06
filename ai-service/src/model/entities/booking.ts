@@ -1,36 +1,44 @@
-import { Column, CreateDateColumn, JoinColumn, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm"
-import { Appointment } from "./appointment"
-import { PaymentStatus } from "../../types/enum.types"
-import { Session } from "./session"
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from "typeorm";
+import { Appointment } from "./appointment";
+import { PaymentStatus } from "../../types/enum.types";
+import { Session } from "./session";
 
-
+@Entity()
 export class Booking {
-    @PrimaryGeneratedColumn('uuid')
-    id!: string
+  @PrimaryGeneratedColumn("uuid")
+  id!: string;
 
-    @Column()
-    patient_id!: string
+  @Column()
+  patient_id!: string;
 
-    @Column()
-    doctor_id!: string
+  @Column()
+  doctor_id!: string;
 
-    @Column()
-    amount!: number
+  @Column()
+  amount!: number;
 
-    @Column({type: 'enum', enum: PaymentStatus, default: PaymentStatus.PENDING })
-    payment_status!: string
+  @Column({ type: "enum", enum: PaymentStatus, default: PaymentStatus.PENDING })
+  payment_status!: string;
 
-    @CreateDateColumn()
-    created_at!: Date
+  @CreateDateColumn()
+  created_at!: Date;
 
-    @UpdateDateColumn()
-    updated_at!: Date
+  @UpdateDateColumn()
+  updated_at!: Date;
 
-    @OneToOne(() => Session, session => session.booking)
-    @JoinColumn()
-    session!: Session
+  @OneToOne(() => Session, (session) => session.booking)
+  @JoinColumn()
+  session!: Session;
 
-    @OneToOne(() => Appointment, appointment => appointment.booking)
-    @JoinColumn()
-    appointment!: Appointment
+  @OneToOne(() => Appointment, (appointment) => appointment.booking)
+  @JoinColumn()
+  appointment!: Appointment;
 }

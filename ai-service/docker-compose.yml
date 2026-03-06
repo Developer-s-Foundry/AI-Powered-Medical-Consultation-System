@@ -1,51 +1,48 @@
 services:
-
   ai-service-app:
     build:
       context: .
       dockerfile: dockerfile
     container_name: ai-service
     ports:
-      - '${SERVER_PORT:-3001}:3000'
+      - "${SERVER_PORT:-2026}:3000"
     environment:
       NODE_ENV: production
-      DB_PORT: '${DB_PORT:-5432}'
-      DB_HOST: '${DB_HOST:-postgres-db}'
-      DB_USERNAME: '${DB_USERNAME}'
-      DB_PASSWORD: '${DB_PASSWORD}'
-      DB_NAME: '${DB_NAME}'
+      DB_PORT: "${DB_PORT:-5439}"
+      DB_HOST: "${DB_HOST:-postgres-db}"
+      DB_USERNAME: "${DB_USERNAME}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      DB_NAME: "${DB_NAME}"
       REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT:-6379}:6379
+      REDIS_PORT: ${REDIS_PORT:-6379}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DB: ${REDIS_DB:-0}
-      
     depends_on:
       postgres-db:
         condition: service_healthy
       redis:
-        condition: service_healthy  # wait for redis to be ready
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - ai-service-network
-    
+
   # ========================================
   # PostgreSQL Database Service
   # ========================================
-
   postgres-db:
     image: postgres:15-alpine
     container_name: ai-service-db
     environment:
-      DB_USERNAME: '${DB_USERNAME}'
-      DB_PASSWORD: '${DB_PASSWORD}'
-      DB_NAME: '${DB_NAME}'
+      POSTGRES_USER: "${DB_USERNAME}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_DB: "${DB_NAME}"
     volumes:
-      - postgres_data:/var/lib/postgresql
+      - postgres_data:/var/lib/postgresql/data
     ports:
-      - '${DB_PORT:-5432}:5432'
+      - "${POSTGRES_PORT:-5439}:5432"
     restart: unless-stopped
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME} -d ${DB_NAME}']
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -59,32 +56,32 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - '6379:6379'                 # expose to host for local debugging
+      - "6378:6379"
     command: redis-server --requirepass yourpassword
     volumes:
-      - redis_data:/data            # persist data across restarts
+      - redis_data:/data
     healthcheck:
-      test: ['CMD', 'redis-cli', '-a', 'yourpassword', 'ping']
+      test: ["CMD", "redis-cli", "-a", "yourpassword", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
+    networks:
+      - ai-service-network
 
-
-# ========================================
-# Rabbitmq Configuration
-# ========================================
-  Rabbitmq:
+  # ========================================
+  # RabbitMQ Configuration
+  # ========================================
+  rabbitmq:
     image: rabbitmq:4.2.4-management-alpine
     container_name: ai-service-rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: '${RABBITMQ_DEFAULT_USER}'
-      RABBITMQ_DEFAULT_PASS: '${RABBITMQ_DEFAULT_PASS}'
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_DEFAULT_USER}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_DEFAULT_PASS}"
     ports:
-      - '5672:5672' # RabbitMQ default port
-      - '15672:15672' # RabbitMQ management UI port
+      - "5673:5672"
+      - "15673:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
-
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
       interval: 30s
@@ -93,22 +90,16 @@ services:
       start_period: 30s
     restart: unless-stopped
     networks:
-      - ai-service-network 
-
-
-
-
+      - ai-service-network
 
 # ========================================
 # Volume Configuration
 # ========================================
 volumes:
-
   rabbitmq_data:
   postgres_data:
     name: ai-service-postgres-data
     driver: local
-
   redis_data:
     name: ai-service-redis-data
     driver: local

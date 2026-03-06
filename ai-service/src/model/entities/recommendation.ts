@@ -1,6 +1,7 @@
 import {
   Column,
   CreateDateColumn,
+  Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
@@ -8,6 +9,7 @@ import { RecommendationType } from "../../types/enum.types";
 import { Session } from "./session";
 import { RiskEvent } from "./risk_events";
 
+@Entity()
 export class Recommendation {
   @PrimaryGeneratedColumn("uuid")
   rec_id!: string;
@@ -15,7 +17,7 @@ export class Recommendation {
   @Column()
   doctor_id!: string;
 
-  @Column({ type: "enum", enum: RecommendationType })
+  @Column({ type: "enum", enum: Object.values(RecommendationType) })
   rec_type!: string | null;
 
   @Column({ type: "text" })

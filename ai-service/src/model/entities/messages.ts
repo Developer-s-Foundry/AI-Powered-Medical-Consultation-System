@@ -24,7 +24,7 @@ export class Message {
   @CreateDateColumn()
   created_at!: Date;
 
-  @Column({ type: "enum", enum: MessageDirection })
+  @Column({ type: "enum", enum: Object.values(MessageDirection) })
   direction!: MessageDirection; // (in = patient, out = system response) so both sides of the conversation live in one table
 
   @Column({ default: false })

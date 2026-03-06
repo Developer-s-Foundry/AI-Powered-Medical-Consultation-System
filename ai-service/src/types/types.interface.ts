@@ -1,5 +1,5 @@
 import { Recommendation } from "./../model/entities/recommendation";
-import { Server } from "socket.io";
+import { Socket } from "socket.io";
 
 export interface patientPayload {
   type: string;
@@ -76,7 +76,7 @@ export interface PipelineParams {
   sessionId: string;
   patientId: string;
   content: string;
-  socket: Server;
+  socket: Socket;
   socketId: string;
 }
 

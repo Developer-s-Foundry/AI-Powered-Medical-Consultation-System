@@ -1,31 +1,31 @@
-import { Column, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
-import { SymptomCode } from "./symptom_code"
-import { RiskLevel } from "../../types/enum.types"
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { SymptomCode } from "./symptom_code";
+import { RiskLevel } from "../../types/enum.types";
 
-
+@Entity()
 export class ScoringRule {
-    @PrimaryGeneratedColumn('uuid')
-    id!: string
+  @PrimaryGeneratedColumn("uuid")
+  id!: string;
 
-    @Column()
-    rule_name!: string // a label describing what this rule does
+  @Column()
+  rule_name!: string; // a label describing what this rule does
 
-    @Column({
-    type: 'decimal',
+  @Column({
+    type: "decimal",
     precision: 6,
     scale: 2,
-    })
-    weight_multiplier!: string //a decimal multiplier applied on top of the symptom's default_weight
+  })
+  weight_multiplier!: string; //a decimal multiplier applied on top of the symptom's default_weight
 
-    @Column({type: 'enum', enum: RiskLevel})
-    applies_to_risk!: string
+  @Column({ type: "enum", enum: Object.values(RiskLevel) })
+  applies_to_risk!: string;
 
-    @Column()
-    is_active!: boolean
+  @Column()
+  is_active!: boolean;
 
-    @Column()
-    effective_from!: Date // date from which this rule version is valid, allowing rule versioning over time
+  @Column()
+  effective_from!: Date; // date from which this rule version is valid, allowing rule versioning over time
 
-    @ManyToOne(() => SymptomCode, symptom_code => symptom_code.scoring)
-    symptom_code!: SymptomCode
+  @ManyToOne(() => SymptomCode, (symptom_code) => symptom_code.scoring)
+  symptom_code!: SymptomCode;
 }

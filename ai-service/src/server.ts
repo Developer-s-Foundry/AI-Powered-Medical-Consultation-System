@@ -1,4 +1,4 @@
-import dotenv, { config } from "dotenv";
+import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import AppDataSource from "./config/database";
@@ -11,10 +11,10 @@ import { socketAuthMiddleware } from "./middleware/socket.middleware";
 import { initializeSocket } from "./config/socket";
 
 (async () => {
-  dotenv.config();
   const logger = Logger.getInstance();
 
   const port = process.env.SERVER_PORT;
+  console.log("PORT:", port);
   // const app: express.Application = express();
   //  app.use(express.json());
 
@@ -31,6 +31,7 @@ import { initializeSocket } from "./config/socket";
       console.log(`Server is running on port ${port}`);
     });
   } catch (error) {
-    logger.error("Error starting server:", error);
+    console.error("Error starting server:", error);
+    process.exit(1);
   }
 })();
