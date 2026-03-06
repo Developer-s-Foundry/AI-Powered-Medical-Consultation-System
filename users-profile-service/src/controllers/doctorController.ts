@@ -88,6 +88,30 @@ export class DoctorController {
   });
 
   /**
+   * Get doctor profile by Ids
+   * POST /api/doctors/profilebyIds
+   */
+  getDoctorsByIds = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      throw new AppError("User not authenticated", 401);
+    }
+    const body = req.body;
+
+    const doctors = await doctorService.getDoctorsbyIDs(body);
+
+    if (!doctors) {
+      throw new AppError("Doctor profile not found", 404);
+    }
+
+    res.json(
+      ResponseFormatter.success(doctors),
+    );
+  });
+
+
+  /**
    * Get doctor profile by ID (public)
    * GET /api/doctors/profile/:userId
    */

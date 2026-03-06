@@ -1,8 +1,9 @@
 import { DoctorProfile } from "../models/DoctorProfile";
-import { DoctorProfileAttributes, BankDetails } from "../@types/doctor.types";
+import { DoctorProfileAttributes, BankDetails, GetDoctorsRequest } from "../@types/doctor.types";
 import logger from "../utils/logger";
 import eventPublisher from "./EventPublisher";
 import encryptionService from "../utils/encryption";
+import { Op } from "sequelize";
 import axios from "axios";
 
 export class DoctorService {
@@ -58,6 +59,28 @@ export class DoctorService {
   async getAllDoctors(): Promise<DoctorProfile[]> {
     try {
       return await DoctorProfile.findAll();
+    } catch (error) {
+      logger.error("Error fetching all doctors:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * 
+   * Get doctor profiles by Ids
+   * 
+   */
+
+  async getDoctorsbyIDs(doctorParams: GetDoctorsRequest): Promise<DoctorProfile[]> {
+    try {
+      return await DoctorProfile.findAll({
+        where: {
+          userId: {
+            [Op.in]: doctorParams.ids
+          }
+        },
+        attributes: ["userId", "firstName", "lastName"]
+      });
     } catch (error) {
       logger.error("Error fetching all doctors:", error);
       throw error;

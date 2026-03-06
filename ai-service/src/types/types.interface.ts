@@ -115,3 +115,26 @@ export interface DaySchedule {
 }
 
 export type WeeklySchedule = Record<string, DaySchedule>;
+
+type Doctor = {
+  id?: string;
+  firstName?: string;
+  lastName?: string;
+};
+
+export interface AppointmentType {
+  id: string
+  date: string;
+  time: string;
+  reason: string;
+  type: string;
+  status: string;
+  doctor: Doctor
+};
+
+
+export interface doctorsData{
+  userId: string
+  firstName: string
+  lastName: string
+}
