@@ -9,7 +9,7 @@ import { Transaction } from "./transaction.entity";
  export class Payment extends BaseEntity {
 
     @Column()
-    booking_id!: string
+    appointment_id!: string
 
     @Column()
     patient_id!: string

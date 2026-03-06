@@ -46,6 +46,13 @@ export class PaymentRepository implements IPaymentRepository {
        return payment;
     }
 
+    async verifyPayment (paymentReferenceId: string):Promise<Payment> {
+        const payment =  await this.paymentRepository.findOne({where: {id: paymentReferenceId}})
+        if (!payment) {
+        throw new AppError("Payment not found", 404);
+       }
+       return payment;
+    }
     async updatePayment(paymentId: string, updateData: Partial<Payment>): Promise<Payment> {
         const payment = await this.paymentRepository.findOne({ where: { id: paymentId } });
         if (!payment) {

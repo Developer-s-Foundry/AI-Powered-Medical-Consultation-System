@@ -5,7 +5,7 @@ export interface ResponseData {
 }
 
 export interface PaymentType {
-    booking_id: string;
+    doctor_id: string;
     patient_id: string;
     amount: number;
     provider_name: string;
