@@ -20,7 +20,9 @@ export enum environment_variables {
     REDIS_PORT='REDIS_PORT',
     REDIS_PASSWORD='REDIS_PASSWORD',
     REDIS_DB='REDIS_DB',
-    SOCKET_JWT_SECRET='SOCKET_JWT_SECRET'
+    SOCKET_JWT_SECRET='SOCKET_JWT_SECRET',
+    ANTHROPIC_API_URL= 'ANTHROPIC_API_URL',
+    ANTHROPIC_API_KEY= 'ANTHROPIC_API_KEY'
 }
 
 export enum RiskLevel {
@@ -33,6 +35,15 @@ export enum PaymentStatus {
     FAILED = 'FAILED',
     COMPLETED = 'COMPLETED',
     PENDING = 'PENDING'
+}
+
+export enum AppointmentStatus {
+    PENDING = "PENDING",       // created but payment not completed
+    CONFIRMED = "CONFIRMED",   // payment successful, slot reserved
+    CANCELLED = "CANCELLED",   // cancelled by doctor or patient
+    COMPLETED = "COMPLETED",   // consultation finished
+    NO_SHOW = "NO_SHOW"        // patient did not join
+
 }
 
 export enum MessageDirection {

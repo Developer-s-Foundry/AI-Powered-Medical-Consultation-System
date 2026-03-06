@@ -33,5 +33,7 @@ export const config = {
     REDIS_PORT: getenv(environment_variables.REDIS_PORT),
     REDIS_PASSWORD: getenv(environment_variables.REDIS_PASSWORD),
     REDIS_DB: getenv(environment_variables.REDIS_DB),
-    SOCKET_JWT_SECRET: getenv(environment_variables.SOCKET_JWT_SECRET)
+    SOCKET_JWT_SECRET: getenv(environment_variables.SOCKET_JWT_SECRET),
+    ANTHROPIC_API_KEY: getenv(environment_variables.ANTHROPIC_API_KEY),
+    ANTHROPIC_API_URL: getenv(environment_variables.ANTHROPIC_API_URL)
 }

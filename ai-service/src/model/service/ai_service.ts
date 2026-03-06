@@ -1,8 +1,8 @@
 import AppDataSource from "../../config/database";
 import { SymptomCode } from "../entities/symptom_code";
 import { RawAIResponse } from "../../types/types.interface";
+import { config } from "../../config/env.config";
 
-const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const MODEL = "claude-sonnet-4-20250514";
 const CONFIDENCE_THRESHOLD = 0.4;
 
@@ -87,11 +87,11 @@ REQUIRED JSON FORMAT:
   async callAI(patientMessage: string): Promise<RawAIResponse> {
     const systemPrompt = await this.buildSystemPrompt();
 
-    const response = await fetch(ANTHROPIC_API_URL, {
+    const response = await fetch(config.ANTHROPIC_API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY!,
+        "x-api-key": config.ANTHROPIC_API_KEY!,
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({

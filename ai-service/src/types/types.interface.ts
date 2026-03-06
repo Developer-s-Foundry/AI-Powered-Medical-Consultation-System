@@ -1,4 +1,4 @@
-import { Recommendation } from './../model/entities/recommendation';
+
 import { Server } from 'socket.io'
 
 
@@ -86,39 +86,32 @@ export interface PipelineParams {
 }
 
 export interface RecommendationDetails {
-      rec_id: string,
-      rec_type: string,
+      recId: string,
+      recType: string,
       reason: string,
       doctor: {
-        doctor_id: string,
-        first_name: string,
-        last_name: string,
+        doctorId: string,
+        firstName: string,
+        lastName: string,
         specialty: string,
+        hospitalName: string,
+        address: string,
+        availableDays: WeeklySchedule
       },
 }
 
-// {
-//   type: "TRIAGE_RESPONSE",
-//   risk_level: "MEDIUM",
-//   content: "Monitor your blood sugar...",
-//   recommendation: {
-//     rec_type: "optional",
-//     doctor: { full_name: "Dr. Amara Okafor" }
-//   }
-// }
+export interface AppointmentParams {
+  patientId: string
+  doctorId: string
+  sessionId: string
+  availableDays: WeeklySchedule
+  reason: string
+}
 
-// {
-//   type: "TRIAGE_RESPONSE",
-//   risk_level: "MEDIUM",
-//   content: "Monitor your blood sugar...",
-//   recommendation: null   // frontend sees null, renders no button
-// }
+export interface DaySchedule {
+  isAvailable: boolean,
+  startTime: string,
+  endTime: string
+}
 
-
-// {
-//   type: "TRIAGE_RESPONSE",
-//   risk_level: "LOW",
-//   content: "Rest and stay hydrated. See a doctor if symptoms persist.",
-//   recommendation: null
-// }
-// ```
+export type WeeklySchedule = Record<string, DaySchedule>;

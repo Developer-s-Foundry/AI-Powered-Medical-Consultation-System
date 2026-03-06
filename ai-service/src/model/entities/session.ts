@@ -2,7 +2,7 @@ import { CreateDateColumn, PrimaryGeneratedColumn,OneToOne ,Column, OneToMany } 
 import { RiskLevel, SessionStatus } from "../../types/enum.types"
 import { AiResponse } from "./ai_responses"
 import { Message } from "./messages"
-import { Booking } from "./booking"
+import { Appointment } from "./appointment"
 import { RiskEvent } from "./risk_events"
 import { Recommendation } from "./recommendation"
 import { Escalation } from "./escalation"
@@ -33,8 +33,8 @@ export class Session {
     @OneToMany(() => Message, (message) => message.session)
     message!: Message []
 
-    @OneToOne(() => Booking, booking => booking.session)
-    booking!: Booking
+    @OneToOne(() => Appointment, appointment => appointment.session)
+    appointment!: Appointment
 
     @OneToMany(() => RiskEvent, (risk_event) => risk_event.session)
     risk_event!: RiskEvent []

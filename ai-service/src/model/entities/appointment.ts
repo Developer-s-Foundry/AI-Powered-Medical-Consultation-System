@@ -1,7 +1,11 @@
+import { PaymentStatus } from "../../types/enum.types"
 import { Entity, Column, OneToOne, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from "typeorm";
-import { Booking } from "./booking";
+import { Session } from "./session"
+import { AppointmentStatus } from "../../types/enum.types";
 
 
+
+@Entity()
 export class Appointment {
     @PrimaryGeneratedColumn('uuid')
     id!: string
@@ -12,14 +16,23 @@ export class Appointment {
     @Column()
     doctor_id!: string
 
-    @Column()
+    @Column({ type: "timestamp" })
     appointment_date!: Date
 
-    @Column()
-    appointment_time!: Date
+    @Column({type: 'time'})
+    appointment_time!: string
 
-    @Column()
-    duration_minutes!: Date
+    @Column({type: 'enum', 
+        enum: PaymentStatus, 
+        default: PaymentStatus.PENDING })
+    payment_status!: PaymentStatus
+
+    @Column({
+        type: "enum",
+        enum: AppointmentStatus,
+        default: AppointmentStatus.PENDING
+    })
+    status!: AppointmentStatus; // after payment appointment status changes to confirmed
 
     @Column()
     reason!: string
@@ -36,6 +49,6 @@ export class Appointment {
     @UpdateDateColumn()
     updated_at!: Date
 
-    @OneToOne(() => Booking, (booking) => booking.appointment)
-    booking!: Booking
+    @OneToOne(() => Session, session => session.appointment)
+    session!: Session
 }
