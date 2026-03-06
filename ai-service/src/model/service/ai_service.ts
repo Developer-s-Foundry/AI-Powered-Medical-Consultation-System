@@ -89,7 +89,7 @@ REQUIRED JSON FORMAT:
   }
 
   /**
-   * Call Anthropic API
+   * Call Gemini
    */
   async callAI(patientMessage: string): Promise<RawAIResponse> {
 
