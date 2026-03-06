@@ -9,6 +9,7 @@ import { RabbitMQConfig } from "./config/rabbitmq";
 import { Response as ExResponse, Request as ExRequest } from "express";
 import { RegisterRoutes } from "./swagger/routes";
 import swaggerUi from "swagger-ui-express";
+import { config } from "./config/env.config";
 
 process.on("uncaughtException", (error) => {
   console.error("Uncaught Exception:", error);
@@ -25,7 +26,7 @@ process.on("unhandledRejection", (reason) => {
   const rabbitMQ = new RabbitMQConfig();
   console.log("2. Logger and RabbitMQ config created");
 
-  const port = process.env.PORT || 3004;
+  const port = config.PORT || 3004;
   const app: express.Application = express();
 
   app.use(express.json());
@@ -90,7 +91,7 @@ process.on("unhandledRejection", (reason) => {
     console.log("8. Starting the server...");
 
     // Start the server
-    app.listen(port, () => {
+    app.listen(port, '0.0.0.0', () => {
       logger.logToConsole();
       logger.info(`Server is running on port ${port}`);
       console.log(`Server is running on port ${port}`);
