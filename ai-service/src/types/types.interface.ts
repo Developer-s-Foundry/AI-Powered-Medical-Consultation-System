@@ -1,14 +1,10 @@
 
-import { Server } from 'socket.io'
-
+import { Server } from "socket.io";
 
 export interface patientPayload {
-    type: string
-    content: string
+  type: string;
+  content: string;
 }
-
-
-
 
 export interface SymptomInput {
   code: string;
@@ -29,7 +25,7 @@ export interface EvaluateRiskResult {
   adviceShown: boolean;
   adviceUsed: boolean;
   needsDoctor: boolean;
-  recType: "mandatory" | "optional" ;
+  recType: "mandatory" | "optional" | null;
   escalationId: string | null;
 }
 
@@ -37,11 +33,10 @@ export interface MatchDoctorParams {
   eventId: string;
   sessionId: string;
   responseId: string;
-  recType: "mandatory" | "optional";
+  recType: "mandatory" | "optional" | null;
   weightedScore: number;
   riskLevel: string;
 }
-
 
 export interface ReplacementRule {
   pattern: RegExp;
@@ -82,12 +77,12 @@ export interface PipelineParams {
   patientId: string;
   content: string;
   socket: Server;
-  socketId: string
+  socketId: string;
 }
 
 export interface RecommendationDetails {
       recId: string,
-      recType: string,
+      recType: string | null,
       reason: string,
       doctor: {
         doctorId: string,
