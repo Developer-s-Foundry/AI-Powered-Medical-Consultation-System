@@ -448,7 +448,7 @@ export class DoctorService {
       const profile = await DoctorProfile.findByPk(userId);
       if (!profile) return null;
 
-      // ✅ ENCRYPT SENSITIVE DATA BEFORE SAVING
+      // ENCRYPT SENSITIVE DATA BEFORE SAVING
       const encryptedBankDetails = encryptionService.encryptBankDetails({
         businessName: bankDetails.businessName,
         bankCode: bankDetails.bankCode,
