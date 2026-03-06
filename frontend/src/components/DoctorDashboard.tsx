@@ -88,7 +88,9 @@ export const DoctorDashboard = ({ profile }: DoctorDashboardProps) => {
     setScheduleErr("");
     setScheduleOk("");
     try {
-      await call(`${EP.DOCTOR_UPDATE_DAYS}`, "PUT", { availableDays });
+      await call(`${EP.DOCTOR_UPDATE_AVAILABLE_DAYS}`, "PUT", {
+        availableDays,
+      });
       setScheduleOk("Availability updated!");
       setShowSchedule(false);
     } catch (e: unknown) {

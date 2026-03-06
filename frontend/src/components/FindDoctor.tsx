@@ -67,6 +67,7 @@ export const FindDoctorsPage = () => {
     setLoadingProfile(true);
     try {
       const r = await call(EP.PROFILE_GET_DOCTOR_BY_ID(doc.userId));
+      console.log("FULL PROFILE RAW:", JSON.stringify(r, null, 2));
       setSelectedDoc(r.data || r); // update with full profile from getProfileById
     } catch {
       // keep showing list data if full fetch fails
@@ -88,7 +89,10 @@ export const FindDoctorsPage = () => {
   };
 
   const getConsultationFee = (doc: DoctorProfile) => {
-    const fee = doc.paymentDetails?.consultationFees?.amount;
+    // Check paymentDetails.consultationFees first
+    const fee =
+      doc.paymentDetails?.consultationFees?.amount ??
+      (doc as Record<string, unknown>).consultationFee;
     return fee ? `₦${Number(fee).toLocaleString()}` : "—";
   };
 

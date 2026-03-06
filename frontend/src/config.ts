@@ -25,8 +25,8 @@ export const EP = {
   PROFILE_GET_PATIENT_BY_ID: (id: string) =>
     `${GATEWAY}/api/v1/profiles/patients/${id}`,
   PROFILE_GET_DOCTOR_BY_ID: (id: string) =>
-    `${GATEWAY}/api/v1/profiles/doctors/${id}`,
-  DOCTOR_UPDATE_DAYS: `${GATEWAY}/api/v1/profiles/doctors/schedule/days`,
+    `${GATEWAY}/api/v1/profiles/doctors/profile/${id}`,
+  DOCTOR_UPDATE_AVAILABLE_DAYS: `${GATEWAY}/api/v1/profiles/doctors/schedule/days`,
   DOCTOR_UPDATE_SCHEDULE: `${GATEWAY}/api/v1/profiles/doctors/schedule`,
   DOCTOR_UPDATE_DAY: (day: string) =>
     `${GATEWAY}/api/v1/profiles/doctors/schedule/days/${day}`,

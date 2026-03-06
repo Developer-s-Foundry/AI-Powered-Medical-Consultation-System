@@ -259,8 +259,13 @@ export const ProfileSetupPage = ({
           specialty: df.specialty,
           hospitalName: df.hospitalName,
           yearsOfExperience: df.yearsOfExperience,
-          consultationFee: Number(df.consultationFee),
           consultationSchedule: { availableDays: dAvailableDays },
+          paymentDetails: {
+            consultationFees: {
+              amount: Number(df.consultationFee),
+              currency: "NGN",
+            },
+          },
         };
         endpoint = EP.PROFILE_DOCTOR;
       } else {
