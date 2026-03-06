@@ -1,11 +1,15 @@
 export const routingParts = [
-  { upstream: "http://localhost:3001", pattern: "/api/v1/ai/*", prefix: "" },
+  { upstream: "http://localhost:3001", 
+    pattern: "/api/v1/ai/*", 
+    prefix: "" },
   {
     upstream: "http://localhost:3002",
     pattern: "/api/v1/payments/*",
     prefix: "",
   },
-  { upstream: "http://localhost:3004", pattern: "/api/v1/auth/*", prefix: "" },
+  { upstream: "http://localhost:3001", 
+    pattern: "/api/v1/auth/*", 
+    prefix: "" },
   {
     upstream: "http://localhost:2002",
     pattern: "/api/v1/notifications/*",
@@ -32,6 +36,9 @@ export const routingParts = [
     prefix: "/api/pharm",
   },
 ];
+
+
+
 export const authPublicRoutes = [
   "/api/v1/auth/users/login",
   "/api/v1/auth/users/register",

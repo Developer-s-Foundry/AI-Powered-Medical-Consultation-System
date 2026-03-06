@@ -1,7 +1,7 @@
 {
   "name": "api-gateway-service",
   "version": "1.0.0",
-  "description": "Handles and verify every reguest before it is forwarded to the target service",
+  "description": "Handles and verify every request before it is forwarded to the target service",
   "main": "server.js",
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
