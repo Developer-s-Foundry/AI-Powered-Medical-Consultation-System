@@ -6,7 +6,6 @@ const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const MODEL = "claude-sonnet-4-20250514";
 const CONFIDENCE_THRESHOLD = 0.4;
 
-
 /**
  * Fetches all active symptom codes from the DB and formats them
  * into the system prompt so the AI can map patient language to codes.
@@ -18,7 +17,6 @@ export class AIService {
   }
 
   private get repository() {
-    
     return this.dataSource.getRepository(SymptomCode);
   }
 
@@ -38,7 +36,7 @@ export class AIService {
         (c) =>
           `${c.code} | ${c.description} | ICD-10: ${
             c.icd10_ref ?? "N/A"
-          } | severity: ${c.severity_class} | weight: ${c.default_weight}`
+          } | severity: ${c.severity_class} | weight: ${c.default_weight}`,
       )
       .join("\n");
 
@@ -86,6 +84,7 @@ REQUIRED JSON FORMAT:
    */
   async callAI(patientMessage: string): Promise<RawAIResponse> {
     const systemPrompt = await this.buildSystemPrompt();
+    console.log("Calling Anthropic API...");
 
     const response = await fetch(ANTHROPIC_API_URL, {
       method: "POST",
@@ -109,9 +108,7 @@ REQUIRED JSON FORMAT:
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(
-        `Anthropic API error ${response.status}: ${errText}`
-      );
+      throw new Error(`Anthropic API error ${response.status}: ${errText}`);
     }
 
     const data = await response.json();
@@ -132,7 +129,7 @@ REQUIRED JSON FORMAT:
       parsed = JSON.parse(cleaned);
     } catch {
       throw new Error(
-        `AI returned non-JSON response: ${rawText.slice(0, 200)}`
+        `AI returned non-JSON response: ${rawText.slice(0, 200)}`,
       );
     }
 
@@ -142,9 +139,7 @@ REQUIRED JSON FORMAT:
   /**
    * Validate AI response against DB and schema
    */
-  async validateAIResponse(
-    aiResponse: RawAIResponse
-  ): Promise<{
+  async validateAIResponse(aiResponse: RawAIResponse): Promise<{
     valid: boolean;
     errors: string[];
     filtered: RawAIResponse | null;
@@ -174,17 +169,15 @@ REQUIRED JSON FORMAT:
 
     const validCodes = new Set(dbCodes.map((r) => r.code));
 
-    const filteredCodes = aiResponse.symptom_codes.filter(
-      (item) => {
-        if (item.confidence < CONFIDENCE_THRESHOLD) {
-          return false;
-        }
-        if (!validCodes.has(item.code)) {
-          return false;
-        }
-        return true;
+    const filteredCodes = aiResponse.symptom_codes.filter((item) => {
+      if (item.confidence < CONFIDENCE_THRESHOLD) {
+        return false;
       }
-    );
+      if (!validCodes.has(item.code)) {
+        return false;
+      }
+      return true;
+    });
 
     return {
       valid: true,

@@ -10,7 +10,7 @@ const app: Application = express();
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "*", // Allow all origins (you can specify specific origins if needed)
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed HTTP methods
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], // Allowed HTTP methods
     allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
   }),
 );

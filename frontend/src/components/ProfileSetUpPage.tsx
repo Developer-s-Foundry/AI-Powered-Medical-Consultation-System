@@ -20,7 +20,7 @@ const DAYS = [
   "sunday",
 ];
 
-const defaultOperationDays = (): OperationDays =>
+const defaultDays = (): OperationDays =>
   Object.fromEntries(
     DAYS.map((d) => [
       d,
@@ -33,6 +33,136 @@ const endpointMap = {
   doctor: "/api/v1/profiles/doctors/profile",
   pharmacy: "/api/v1/profiles/pharmacies/profile",
 };
+
+type DaySlot = { isAvailable: boolean; startTime: string; endTime: string };
+
+const DayScheduler = ({
+  label,
+  days,
+  onToggle,
+  onTimeChange,
+}: {
+  label: string;
+  days: OperationDays;
+  onToggle: (day: string) => void;
+  onTimeChange: (
+    day: string,
+    field: "startTime" | "endTime",
+    val: string,
+  ) => void;
+}) => (
+  <div>
+    <div
+      style={{
+        fontSize: 12,
+        fontWeight: 700,
+        color: C.t,
+        fontFamily: "monospace",
+        marginBottom: 8,
+      }}
+    >
+      {label}{" "}
+      <span style={{ color: C.m, fontWeight: 400 }}>
+        — select days and hours
+      </span>
+    </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      {DAYS.map((day) => {
+        const slot: DaySlot = days[day];
+        return (
+          <div
+            key={day}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "8px 12px",
+              borderRadius: 8,
+              border: `1.5px solid ${slot.isAvailable ? C.p : C.b}`,
+              background: slot.isAvailable ? C.pl : C.s,
+            }}
+          >
+            <button
+              onClick={() => onToggle(day)}
+              style={{
+                width: 36,
+                height: 20,
+                borderRadius: 10,
+                border: "none",
+                cursor: "pointer",
+                background: slot.isAvailable ? C.p : C.b,
+                position: "relative",
+                flexShrink: 0,
+                transition: "background 0.2s",
+              }}
+            >
+              <span
+                style={{
+                  position: "absolute",
+                  top: 2,
+                  left: slot.isAvailable ? 18 : 2,
+                  width: 16,
+                  height: 16,
+                  borderRadius: "50%",
+                  background: "#fff",
+                  transition: "left 0.2s",
+                }}
+              />
+            </button>
+            <span
+              style={{
+                width: 90,
+                fontSize: 13,
+                fontWeight: slot.isAvailable ? 700 : 400,
+                color: slot.isAvailable ? C.p : C.m,
+                textTransform: "capitalize",
+              }}
+            >
+              {day}
+            </span>
+            {slot.isAvailable && (
+              <>
+                <input
+                  type="time"
+                  value={slot.startTime}
+                  onChange={(e) =>
+                    onTimeChange(day, "startTime", e.target.value)
+                  }
+                  style={{
+                    padding: "4px 8px",
+                    borderRadius: 6,
+                    border: `1px solid ${C.b}`,
+                    fontSize: 12,
+                    fontFamily: "inherit",
+                    background: C.s,
+                    color: C.t,
+                    outline: "none",
+                  }}
+                />
+                <span style={{ fontSize: 12, color: C.m }}>to</span>
+                <input
+                  type="time"
+                  value={slot.endTime}
+                  onChange={(e) => onTimeChange(day, "endTime", e.target.value)}
+                  style={{
+                    padding: "4px 8px",
+                    borderRadius: 6,
+                    border: `1px solid ${C.b}`,
+                    fontSize: 12,
+                    fontFamily: "inherit",
+                    background: C.s,
+                    color: C.t,
+                    outline: "none",
+                  }}
+                />
+              </>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  </div>
+);
 
 export const ProfileSetupPage = ({
   user,
@@ -68,11 +198,14 @@ export const ProfileSetupPage = ({
     consultationFee: "0",
   });
 
+  const [dAvailableDays, setDAvailableDays] =
+    useState<OperationDays>(defaultDays());
+
   const [phf, setPhf] = useState({
     pharmacyName: "",
     phone: "",
     licenseNumber: "",
-    operationDays: defaultOperationDays(),
+    operationDays: defaultDays(),
     address: {
       street: "",
       city: "",
@@ -99,33 +232,6 @@ export const ProfileSetupPage = ({
       (error) => console.warn("Geolocation failed:", error.message),
     );
   }, []);
-
-  const toggleDay = (day: string) => {
-    setPhf((p) => ({
-      ...p,
-      operationDays: {
-        ...p.operationDays,
-        [day]: {
-          ...p.operationDays[day],
-          isAvailable: !p.operationDays[day].isAvailable,
-        },
-      },
-    }));
-  };
-
-  const updateDayTime = (
-    day: string,
-    field: "startTime" | "endTime",
-    value: string,
-  ) => {
-    setPhf((p) => ({
-      ...p,
-      operationDays: {
-        ...p.operationDays,
-        [day]: { ...p.operationDays[day], [field]: value },
-      },
-    }));
-  };
 
   const save = async () => {
     setSaving(true);
@@ -154,6 +260,7 @@ export const ProfileSetupPage = ({
           hospitalName: df.hospitalName,
           yearsOfExperience: df.yearsOfExperience,
           consultationFee: Number(df.consultationFee),
+          consultationSchedule: { availableDays: dAvailableDays },
         };
         endpoint = EP.PROFILE_DOCTOR;
       } else {
@@ -175,7 +282,10 @@ export const ProfileSetupPage = ({
     setSaving(false);
   };
 
-  const hasAvailableDay = Object.values(phf.operationDays).some(
+  const hasAvailableDoctorDay = Object.values(dAvailableDays).some(
+    (d) => d.isAvailable,
+  );
+  const hasAvailablePharmacyDay = Object.values(phf.operationDays).some(
     (d) => d.isAvailable,
   );
 
@@ -188,11 +298,15 @@ export const ProfileSetupPage = ({
         pf.address.state &&
         pf.address.country
       : user.role === "doctor"
-        ? df.firstName && df.lastName && df.specialty && df.licenseNumber
+        ? df.firstName &&
+          df.lastName &&
+          df.specialty &&
+          df.licenseNumber &&
+          hasAvailableDoctorDay
         : phf.pharmacyName &&
           phf.phone &&
           phf.licenseNumber &&
-          hasAvailableDay &&
+          hasAvailablePharmacyDay &&
           phf.address.street &&
           phf.address.city &&
           phf.address.state &&
@@ -211,7 +325,6 @@ export const ProfileSetupPage = ({
       }}
     >
       <Card style={{ width: "100%", maxWidth: 620 }}>
-        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <div style={{ fontWeight: 900, fontSize: 22, color: C.p }}>
             HealthBridge
@@ -338,17 +451,52 @@ export const ProfileSetupPage = ({
 
         {/* ── Doctor Form ── */}
         {user.role === "doctor" && (
-          <div
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
-          >
-            {Object.keys(df).map((k) => (
-              <Inp
-                key={k}
-                label={k}
-                value={df[k as keyof typeof df]}
-                onChange={(v) => setDf((p) => ({ ...p, [k]: v }))}
-              />
-            ))}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 12,
+              }}
+            >
+              {(Object.keys(df) as (keyof typeof df)[]).map((k) => (
+                <Inp
+                  key={k}
+                  label={k}
+                  value={df[k]}
+                  onChange={(v) => setDf((p) => ({ ...p, [k]: v }))}
+                />
+              ))}
+            </div>
+            <DayScheduler
+              label="availableDays"
+              days={dAvailableDays}
+              onToggle={(day) =>
+                setDAvailableDays((p) => ({
+                  ...p,
+                  [day]: { ...p[day], isAvailable: !p[day].isAvailable },
+                }))
+              }
+              onTimeChange={(day, field, val) =>
+                setDAvailableDays((p) => ({
+                  ...p,
+                  [day]: { ...p[day], [field]: val },
+                }))
+              }
+            />
+            {!hasAvailableDoctorDay && (
+              <div
+                style={{
+                  fontSize: 12,
+                  color: C.d,
+                  padding: "6px 10px",
+                  background: "#fff0f0",
+                  borderRadius: 6,
+                }}
+              >
+                ⚠️ Please select at least one available day
+              </div>
+            )}
           </div>
         )}
 
@@ -430,121 +578,31 @@ export const ProfileSetupPage = ({
                   : "Requesting location..."}
               </div>
             </div>
-
-            {/* Operation Days */}
-            <div>
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: C.t,
-                  fontFamily: "monospace",
-                  marginBottom: 8,
-                }}
-              >
-                operationDays{" "}
-                <span style={{ color: C.m, fontWeight: 400 }}>
-                  — select days and hours
-                </span>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {DAYS.map((day) => {
-                  const slot = phf.operationDays[day];
-                  return (
-                    <div
-                      key={day}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        padding: "8px 12px",
-                        borderRadius: 8,
-                        border: `1.5px solid ${slot.isAvailable ? C.p : C.b}`,
-                        background: slot.isAvailable ? C.pl : C.s,
-                      }}
-                    >
-                      <button
-                        onClick={() => toggleDay(day)}
-                        style={{
-                          width: 36,
-                          height: 20,
-                          borderRadius: 10,
-                          border: "none",
-                          cursor: "pointer",
-                          background: slot.isAvailable ? C.p : C.b,
-                          position: "relative",
-                          flexShrink: 0,
-                          transition: "background 0.2s",
-                        }}
-                      >
-                        <span
-                          style={{
-                            position: "absolute",
-                            top: 2,
-                            left: slot.isAvailable ? 18 : 2,
-                            width: 16,
-                            height: 16,
-                            borderRadius: "50%",
-                            background: "#fff",
-                            transition: "left 0.2s",
-                          }}
-                        />
-                      </button>
-                      <span
-                        style={{
-                          width: 90,
-                          fontSize: 13,
-                          fontWeight: slot.isAvailable ? 700 : 400,
-                          color: slot.isAvailable ? C.p : C.m,
-                          textTransform: "capitalize",
-                        }}
-                      >
-                        {day}
-                      </span>
-                      {slot.isAvailable && (
-                        <>
-                          <input
-                            type="time"
-                            value={slot.startTime}
-                            onChange={(e) =>
-                              updateDayTime(day, "startTime", e.target.value)
-                            }
-                            style={{
-                              padding: "4px 8px",
-                              borderRadius: 6,
-                              border: `1px solid ${C.b}`,
-                              fontSize: 12,
-                              fontFamily: "inherit",
-                              background: C.s,
-                              color: C.t,
-                              outline: "none",
-                            }}
-                          />
-                          <span style={{ fontSize: 12, color: C.m }}>to</span>
-                          <input
-                            type="time"
-                            value={slot.endTime}
-                            onChange={(e) =>
-                              updateDayTime(day, "endTime", e.target.value)
-                            }
-                            style={{
-                              padding: "4px 8px",
-                              borderRadius: 6,
-                              border: `1px solid ${C.b}`,
-                              fontSize: 12,
-                              fontFamily: "inherit",
-                              background: C.s,
-                              color: C.t,
-                              outline: "none",
-                            }}
-                          />
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <DayScheduler
+              label="operationDays"
+              days={phf.operationDays}
+              onToggle={(day) =>
+                setPhf((p) => ({
+                  ...p,
+                  operationDays: {
+                    ...p.operationDays,
+                    [day]: {
+                      ...p.operationDays[day],
+                      isAvailable: !p.operationDays[day].isAvailable,
+                    },
+                  },
+                }))
+              }
+              onTimeChange={(day, field, val) =>
+                setPhf((p) => ({
+                  ...p,
+                  operationDays: {
+                    ...p.operationDays,
+                    [day]: { ...p.operationDays[day], [field]: val },
+                  },
+                }))
+              }
+            />
           </div>
         )}
 

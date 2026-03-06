@@ -26,6 +26,10 @@ export const EP = {
     `${GATEWAY}/api/v1/profiles/patients/${id}`,
   PROFILE_GET_DOCTOR_BY_ID: (id: string) =>
     `${GATEWAY}/api/v1/profiles/doctors/${id}`,
+  DOCTOR_UPDATE_DAYS: `${GATEWAY}/api/v1/profiles/doctors/schedule/days`,
+  DOCTOR_UPDATE_SCHEDULE: `${GATEWAY}/api/v1/profiles/doctors/schedule`,
+  DOCTOR_UPDATE_DAY: (day: string) =>
+    `${GATEWAY}/api/v1/profiles/doctors/schedule/days/${day}`,
   DOCTORS_SEARCH: `${GATEWAY}/api/v1/profiles/doctors/search`,
   DOCTOR_PAYMENT_DATA: (id: string) =>
     `${GATEWAY}/api/v1/profiles/doctors/${id}/payment`,
