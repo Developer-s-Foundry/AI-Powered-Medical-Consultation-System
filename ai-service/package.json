@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/Developer-s-Foundry/AI-Powered-Medical-Consultation#readme",
   "dependencies": {
+    "@google/genai": "^1.44.0",
     "amqplib": "^0.10.9",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.70.1",

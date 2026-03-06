@@ -2,8 +2,12 @@ import AppDataSource from "../../config/database";
 import { SymptomCode } from "../entities/symptom_code";
 import { RawAIResponse } from "../../types/types.interface";
 import { config } from "../../config/env.config";
+import { GoogleGenAI } from "@google/genai";
+import { Logger } from "../../config/logger";
 
-const MODEL = "claude-sonnet-4-20250514";
+
+
+
 const CONFIDENCE_THRESHOLD = 0.4;
 
 
@@ -13,6 +17,9 @@ const CONFIDENCE_THRESHOLD = 0.4;
  */
 export class AIService {
   private dataSource: typeof AppDataSource;
+  private ai = new GoogleGenAI({apiKey: config.GEMINI_API_KEY});
+  private logger = Logger.getInstance()
+
   constructor() {
     this.dataSource = AppDataSource;
   }
@@ -85,43 +92,27 @@ REQUIRED JSON FORMAT:
    * Call Anthropic API
    */
   async callAI(patientMessage: string): Promise<RawAIResponse> {
+
     const systemPrompt = await this.buildSystemPrompt();
 
-    const response = await fetch(config.ANTHROPIC_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": config.ANTHROPIC_API_KEY!,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: [
-          {
-            role: "user",
-            content: patientMessage,
+      const response = await this.ai.models.generateContent({
+          model: "gemini-3-flash-preview",
+          contents: patientMessage,
+          config: {
+            responseMimeType: "application/json",
+            systemInstruction: systemPrompt,
           },
-        ],
-      }),
-    });
+        });
+        console.log(response.text);
 
-    if (!response.ok) {
-      const errText = await response.text();
+    if (!response.text) {
+      this.logger.warn('Gemini API error')
       throw new Error(
-        `Anthropic API error ${response.status}: ${errText}`
+        `Gemini API error`
       );
     }
 
-    const data = await response.json();
-
-    const rawText = data.content
-      .filter((block: any) => block.type === "text")
-      .map((block: any) => block.text)
-      .join("");
-
-    const cleaned = rawText
+    const cleaned = response.text
       .replace(/```json\s*/gi, "")
       .replace(/```\s*/g, "")
       .trim();
@@ -132,7 +123,7 @@ REQUIRED JSON FORMAT:
       parsed = JSON.parse(cleaned);
     } catch {
       throw new Error(
-        `AI returned non-JSON response: ${rawText.slice(0, 200)}`
+        `AI returned non-JSON response: ${response.text.slice(0, 200)}`
       );
     }
 

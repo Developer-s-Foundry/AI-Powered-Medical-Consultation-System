@@ -35,5 +35,7 @@ export const config = {
     REDIS_DB: getenv(environment_variables.REDIS_DB),
     SOCKET_JWT_SECRET: getenv(environment_variables.SOCKET_JWT_SECRET),
     ANTHROPIC_API_KEY: getenv(environment_variables.ANTHROPIC_API_KEY),
-    ANTHROPIC_API_URL: getenv(environment_variables.ANTHROPIC_API_URL)
+    ANTHROPIC_API_URL: getenv(environment_variables.ANTHROPIC_API_URL),
+    GEMINI_API_KEY: getenv(environment_variables.GEMINI_API_KEY),
+    GEMINI_API_URL: getenv(environment_variables.GEMINI_API_URL)
 }
