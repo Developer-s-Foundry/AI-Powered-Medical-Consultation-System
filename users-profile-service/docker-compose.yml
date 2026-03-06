@@ -1,6 +1,22 @@
 version: "3.8"
 
 services:
+  user-profile-service:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: userprofile-service
+    ports:
+      - "${PORT:-3001}:3001"
+    env_file:
+     - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - authservice-network
+
   # PostgreSQL
   postgres:
     image: postgres:15-alpine

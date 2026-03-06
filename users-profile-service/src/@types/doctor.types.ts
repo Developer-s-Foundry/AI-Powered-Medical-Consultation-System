@@ -69,3 +69,7 @@ export interface DoctorProfileAttributes {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+export interface GetDoctorsRequest {
+  ids: string[];
+}

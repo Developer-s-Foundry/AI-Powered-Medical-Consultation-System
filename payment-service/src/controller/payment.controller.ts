@@ -21,6 +21,13 @@ export class PaymentController extends Controller {
         await this.paymentService.createPayment(paymentData);
     }
 
+     @Post('verify/:reference')
+    public async verifyPayment(
+        @Path() paymentReferenceId: string
+    ): Promise<void> {
+        await this.paymentService.verifyPayment(paymentReferenceId);
+    }
+
     @Get("{paymentId}")
     public async getPaymentById(
         @Path() paymentId: string
@@ -39,6 +46,8 @@ export class PaymentController extends Controller {
     ): Promise<void> {
         await this.paymentService.handlePaystackWebhook(signature, webhookData);
     }
+
+    
 }
         
 

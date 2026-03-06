@@ -21,6 +21,9 @@ router.get("/specialty/:specialty", doctorController.getDoctorsBySpecialty);
 // Get doctors available on specific day (public)
 router.get("/available/:day", doctorController.getDoctorsAvailableOnDay);
 
+// Get doctors by Ids
+router.post("/api/doctors/profilebyIds", doctorController.getDoctorsByIds);
+
 /**
  * Protected Routes (authentication required)
  */

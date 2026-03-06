@@ -24,10 +24,10 @@ export class PaymentService {
         this.producer =  new Producer(new RabbitMQConfig())
     }
 
-    async createPayment(paymentData: PaymentType) :Promise<{access_code: string}> {
+    async createPayment(paymentData: PaymentType) :Promise<{access_code: string, reference: string}> {
         const payment = await this.paymentRepository.createPayment(paymentData)
         // fetch the Doctors payment data from the profile service
-        const doctorPaymentData = await this.getDoctorPaymentData(paymentData.booking_id);
+        const doctorPaymentData = await this.getDoctorPaymentData(paymentData.doctor_id);
 
         // create subaccount
         const subaccount_code = await this.createSubaccount(doctorPaymentData);
@@ -36,6 +36,21 @@ export class PaymentService {
         // initiate payment process
         return await this.initiatePayment(payment.payment_reference_id, paymentData.patient_email,paymentData.amount, subaccount_code); 
       
+    }
+
+    async verifyPayment (paymentReferenceId: string):Promise<{success: boolean}> {
+        const payment =  await this.paymentRepository.verifyPayment(paymentReferenceId);
+        if (!payment) {
+        throw new AppError("Payment not found", 404);
+       }
+       if (payment.status === 'completed'){
+           return {
+                success: true
+            }
+       }
+        return {
+                success: false
+            }
     }
     private async createSubaccount(doctorPaymentData: DoctorsPaymentData): Promise<string> {
         const response = await fetch("https://api.paystack.co/subaccount", {
@@ -71,7 +86,7 @@ export class PaymentService {
         return await response.json();
     }
 
-    private async initiatePayment (reference_id: string, email: string, amount: number, subaccount_code: string) : Promise<{access_code: string}> {
+    private async initiatePayment (reference_id: string, email: string, amount: number, subaccount_code: string) : Promise<{access_code: string, reference: string}> {
          // make a post request to the payment provider's API to initiate the payment process
         const response = await fetch("https://api.paystack.co/transaction/initialize", {
             method: "POST",
@@ -90,7 +105,7 @@ export class PaymentService {
             throw new AppError(`Failed to initialize payment: ${response.statusText}`, response.status);
         }
         const result = await response.json();
-        return {access_code: result.access_code}; // Return the access code for the payment initialization
+        return {access_code: result.access_code, reference: reference_id}; // Return the access code for the payment initialization
 
     }
 
@@ -99,7 +114,7 @@ export class PaymentService {
     }
 
     async getPaymentByReferenceId(paymentReferenceId: string){
-        return await this.paymentRepository.getPaymentById(paymentReferenceId);
+        return await this.paymentRepository. getPaymentByReferenceId(paymentReferenceId);
     }
 
     async updatePayment(paymentId: string, updateData: Partial<Payment>) {

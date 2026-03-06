@@ -2,7 +2,7 @@
 // SERVICE CONFIGURATION
 // ════════════════════════════════════════════════════════════════════════════
 export const GATEWAY =
-  import.meta.env.VITE_GATEWAY_URL || "http://localhost:8080";
+  import.meta.env.VITE_GATEWAY_URL || "http://localhost:3000";
 
 export const EP = {
   // ── Auth Service (via gateway)
@@ -31,8 +31,9 @@ export const EP = {
     `${GATEWAY}/api/v1/profiles/doctors/${id}/payment`,
 
   // ── Payment Service (via gateway)
-  PAYMENT_INTENT: `${GATEWAY}/api/v1/payments/create-intent`,
-  PAYMENT_WEBHOOK: `${GATEWAY}/api/v1/payments/webhooks/stripe`,
+  PAYMENT_INITIATE: `${GATEWAY}/api/v1/payments/initiate`,
+  PAYMENT_WEBHOOK: `${GATEWAY}/api/v1/payments/webhooks/paystack`,
+  PAYMENT_VERIFY: `${GATEWAY}/api/v1/payments/verify`,
 
   // ── Drug Service (via gateway)
   DRUG_CREATE: `${GATEWAY}/api/v1/drugs/create`,

@@ -5,14 +5,9 @@ services:
       dockerfile: dockerfile
     container_name: auth-service
     ports:
-      - "${SERVER_PORT:-3001}:3000"
-    environment:
-      NODE_ENV: development
-      DB_PORT: "${DB_PORT:-5436}"
-      DB_HOST: "${DB_HOST:-postgres-db}"
-      DB_USERNAME: "${DB_USERNAME}"
-      DB_PASSWORD: "${DB_PASSWORD}"
-      DB_NAME: "${DB_NAME}"
+      - "${PORT:-3001}:3001"
+    env_file:
+     - .env
     depends_on:
       postgres-db:
         condition: service_healthy

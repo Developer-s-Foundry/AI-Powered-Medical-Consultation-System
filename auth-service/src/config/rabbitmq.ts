@@ -9,7 +9,7 @@ export class RabbitMQConfig {
     private logger: Logger;
     
     constructor() {
-        this.url = config.RABBITMQURL;
+        this.url = config.RABBITMQ_URL;
         this.logger = Logger.getInstance();
     }
 

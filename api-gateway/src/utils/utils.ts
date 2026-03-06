@@ -49,22 +49,6 @@ export const matchRoute = (pathname: string, routes: routes[]) => {
   return null;
 };
 
-const matchPattern = (path: string, pattern: string) => {
-  const patternParts = pattern.split("/");
-  const pathParts = path.split("/");
-
-  const patternPath = pattern.slice(0, -2);
-
-  if (path.startsWith(patternPath)) {
-    return { matched: true };
-  }
-
-  if (pathParts.length !== patternParts.length) {
-    return {
-      matched: false,
-    };
-  }
-};
 
 export const forwardRequest = async (
   targetUrl: string,

@@ -10,6 +10,9 @@ import { Logger } from "../../config/logger";
 import AppDataSource from "../../config/database";
 import { config } from "../../config/env.config";
 import { AppError } from "../../custom.functions.ts/error";
+import { WeeklySchedule } from "../../types/types.interface";
+
+
 
 export class DoctorMatcher {
   private logger = Logger.getInstance();
@@ -30,7 +33,7 @@ export class DoctorMatcher {
     weightedScore: number;
     dominantSymptom: string;
     specialty: string;
-    recType: "mandatory" | "optional" | null;
+    recType: "mandatory" | "optional"| null;
   }) {
     if (riskLevel === "HIGH") {
       return `HIGH risk triage — ${dominantSymptom} requires immediate specialist review (${specialty}).`;
@@ -82,10 +85,8 @@ export class DoctorMatcher {
     weightedScore,
     riskLevel,
   }: MatchDoctorParams): Promise<RecommendationDetails | null> {
-    this.logger.info(
-      `Matching doctor: recType=${recType} score=${weightedScore}`,
-    );
-
+    this.logger.info(`Matching doctor: recType=${recType} score=${weightedScore}`);
+  
     const responseSymptomRepo = this.dataSource.getRepository(ResponseSymptom);
     const specialtyRepo = this.dataSource.getRepository(SymptomSpecialty);
     const recommendationRepo = this.dataSource.getRepository(Recommendation);
@@ -161,15 +162,30 @@ export class DoctorMatcher {
       `Recommendation created → ${doctor?.firstName ?? "Unassigned"}`,
     );
 
+    if (!doctor) return null;
+    // filter doctor available day
+    const allDays: WeeklySchedule  = doctor.consultationSchedule.availableDays;
+    
+    
+    const doctorAvailableDays = Object.fromEntries(Object.entries(allDays).filter(
+      ([_, value]) => value.isAvailable)
+    )
+
+  
+
+    // subsequently, return array of all the doctors
     return {
-      rec_id: recommendation.rec_id,
-      rec_type: recType,
+      recId: recommendation.rec_id,
+      recType: recType,
       reason,
       doctor: {
-        doctor_id: doctor.userId,
-        first_name: doctor.firstName,
-        last_name: doctor.lastName,
+        doctorId: doctor.userId,
+        firstName: doctor.firstName,
+        lastName: doctor.lastName,
         specialty: doctor.specialty,
+        hospitalName: doctor.hospitalName,
+        address: doctor.address,
+        availableDays: doctorAvailableDays
       },
     };
   }

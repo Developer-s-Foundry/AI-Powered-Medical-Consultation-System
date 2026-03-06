@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { C } from "./Shared";
 import { call } from "../api";
 import { EP } from "../config";
+import { MOCK_DB } from "./MockData";
+import PaystackPop from '@paystack/inline-js'
 import {
   Card,
   Btn,
-  Inp,
   Alrt,
   Spin,
   Av,
@@ -17,6 +19,7 @@ import {
 } from "./Shared";
 import { SBdg } from "./Shared";
 import type { AuthUser } from "./Shared";
+import { useDoctorContext } from "./DoctorProvider";
 
 type PaymentsPageProps = {
   user: AuthUser;
@@ -24,39 +27,108 @@ type PaymentsPageProps = {
 
 export const PaymentsPage = ({ user }: PaymentsPageProps) => {
   const [modal, setModal] = useState(false);
-  const [method, setMethod] = useState("card");
-  const [cardN, setCardN] = useState("");
-  const [exp, setExp] = useState("");
-  const [cvv, setCvv] = useState("");
-  const [cName, setCName] = useState("");
-  const [processing, setProcessing] = useState(false);
   const [ok, setOk] = useState("");
   const [err, setErr] = useState("");
-
+  const [processing, setProcessing] = useState(false)
   const docMap = Object.fromEntries(MOCK_DB.doctors.map((d) => [d.id, d]));
   const selApt = MOCK_DB.appointments[0];
-  const selDoc = docMap[selApt?.doctorId];
+  const selDoc = docMap[selApt?.doctorId]; //th
+  const {doctor} = useDoctorContext();
+  const navigate = useNavigate()
+
+// get all the doctors that have been booked successfully by a patient in the past
+
+// get all the payments related to patient
+// get the current amount patient is to pay
+// get the total sum of all their payment
+// handle the success page
+// set up my paystack profile completely to enable live payment
+// update appointment table
+// test the payment service
+// research 
+
 
   const pay = async () => {
     setProcessing(true);
     setErr("");
+
     const body = {
       patientId: user.id,
-      doctorId: selApt.doctorId,
-      appointmentId: selApt.id,
-      amount: selDoc?.consultationFee || 25000,
-      currency: "NGN",
-      paymentMethod: method,
-    };
-    try {
-      if (!USE_MOCK) await call(EP.PAYMENT_INTENT, "POST", body);
-      setTimeout(() => {
-        setProcessing(false);
-        setModal(false);
-        setOk("✅ Payment successful! Appointment confirmed.");
-      }, 1500);
+      doctor_id: doctor?.doctor_id,
+    amount: doctor?.fee,
+    provider_name: 'paystack',
+    }
+
+  try {
+      // 1. Call backend to initialise transaction with Paystack
+      const res = await call(EP.PAYMENT_INITIATE, "POST", {
+          body
+      });
+
+      if (!res.success) {
+        setErr("Failed to initiate payment")
+
+      }
+
+      const { access_code} = res;
+
+      // 2. Open Paystack popup using access_code from backend
+      const popup = new PaystackPop();
+
+      popup.resumeTransaction(access_code, {
+
+        // 3. Payment was successful
+        onSuccess: async (transaction: { reference: string }) => {
+          try {
+            // 4. Verify on backend — never trust frontend alone
+            const verification = await call(
+              `${EP.PAYMENT_VERIFY}/${transaction.reference}`,
+              "POST",
+              {}
+            );
+
+            if (verification.success) {
+              setModal(false);
+              setOk("✅ Payment successful! Appointment confirmed.");
+
+              // 5. Redirect to success page after short delay
+              setTimeout(() => {
+                navigate("/payment/success", {
+                  state: {
+                    reference: transaction.reference,
+                    amount: selDoc?.consultationFee || 25000,
+                    doctor: {
+                      name: `Dr. ${selDoc?.firstName} ${selDoc?.lastName}`,
+                      specialty: selDoc?.specialty || "General Practice",
+                    },
+                    appointment: {
+                      date: selApt?.date,
+                      time: selApt?.time,
+                      id: selApt?.id,
+                    },
+                    paidAt: new Date().toISOString(),
+                  },
+                });
+              }, 1500);
+            } else {
+              setErr("Payment verification failed. Please contact support.");
+            }
+          } catch {
+            setErr("Could not verify payment. Please contact support.");
+          } finally {
+            setProcessing(false);
+          }
+        },
+
+        // Payment was cancelled by patient
+        onCancel: () => {
+          setProcessing(false);
+          setErr("Payment was cancelled.");
+        },
+      });
+
     } catch (e: any) {
-      setErr(e.message);
+      setErr(e.message || "Something went wrong. Please try again.");
       setProcessing(false);
     }
   };
@@ -68,8 +140,8 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
           Payments
         </h1>
         <div style={{ marginTop: 4, display: "flex", gap: 6 }}>
-          <Tag method="POST" path="/api/v1/payment/create-intent" />
-          <Tag method="POST" path="/api/v1/webhooks/stripe" />
+          <Tag method="POST" path="/api/v1/payment/initiate-payment" />
+          <Tag method="POST" path="/api/v1/webhooks/paystack" />
         </div>
       </div>
 
@@ -85,16 +157,18 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
       >
         <StatCard
           icon="💳"
-          label="totalPaid"
-          value="₦40,000"
+          label="totalPaid" 
+          value="₦40,000" // total amount paid by patient
           c={C.g}
           bg={C.gl}
         />
-        <StatCard icon="⏳" label="pending" value="₦15,000" c={C.w} bg={C.wl} />
+        <StatCard icon="⏳" label="pending" 
+        value="₦15,000" // amount being paid but pending
+        c={C.w} bg={C.wl} />
         <StatCard
           icon="📋"
-          label="transactions"
-          value={MOCK_DB.payments.length}
+          label="transactions" 
+          value={MOCK_DB.payments.length} // total transaction made by customer
         />
       </div>
 
@@ -108,7 +182,7 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
           <Tbl
             cols={[
               {
-                k: "doctor",
+                k: "doctorId",
                 r: (r) => {
                   const d = docMap[r.doctorId];
                   return d ? `Dr. ${d.firstName} ${d.lastName}` : "—";
@@ -169,33 +243,28 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
             </Btn>
           </Card>
         )}
-      </div>
 
-      {/* Payment Modal */}
+         {/* Payment Modal */}
       {modal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,.45)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 200,
-          }}
-        >
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,.45)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 200,
+        }}>
           <Card style={{ width: 420 }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: 14,
-              }}
-            >
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 14,
+            }}>
               <strong style={{ fontSize: 15 }}>Complete Payment</strong>
               <button
-                onClick={() => setModal(false)}
+                onClick={() => { setModal(false); setErr(""); }}
                 style={{
                   background: "none",
                   border: "none",
@@ -208,146 +277,55 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
               </button>
             </div>
 
-            <Tag method="POST" path="/api/v1/payment/create-intent" />
+            <Tag method="POST" path="/api/v1/payment/initiate-payment" />
             <Hr />
 
-            {/* Method selector */}
-            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-              {[
-                { v: "card", l: "💳 Card" },
-                { v: "transfer", l: "🏦 Transfer" },
-                { v: "wallet", l: "👛 Wallet" },
-              ].map((m) => (
-                <button
-                  key={m.v}
-                  onClick={() => setMethod(m.v)}
-                  style={{
-                    flex: 1,
-                    padding: "9px",
-                    borderRadius: 8,
-                    border: `1.5px solid ${method === m.v ? C.p : C.b}`,
-                    cursor: "pointer",
-                    fontSize: 13,
-                    fontWeight: method === m.v ? 700 : 400,
-                    color: method === m.v ? C.p : C.m,
-                    background: method === m.v ? C.pl : C.s,
-                    fontFamily: "inherit",
-                  }}
-                >
-                  {m.l}
-                </button>
-              ))}
-            </div>
-
-            {method === "card" && (
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: 10 }}
-              >
-                <Inp
-                  label="cardName"
-                  value={cName}
-                  onChange={setCName}
-                  placeholder="John Doe"
-                />
-                <Inp
-                  label="cardNumber"
-                  value={cardN}
-                  onChange={(v) =>
-                    setCardN(
-                      v
-                        .replace(/\D/g, "")
-                        .slice(0, 16)
-                        .replace(/(.{4})/g, "$1 ")
-                        .trim(),
-                    )
-                  }
-                  placeholder="0000 0000 0000 0000"
-                />
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: 10,
-                  }}
-                >
-                  <Inp
-                    label="expiryDate"
-                    value={exp}
-                    onChange={(v) =>
-                      setExp(
-                        v
-                          .replace(/\D/g, "")
-                          .slice(0, 4)
-                          .replace(/(.{2})/, "$1/"),
-                      )
-                    }
-                    placeholder="MM/YY"
-                  />
-                  <Inp
-                    label="cvv"
-                    type="password"
-                    value={cvv}
-                    onChange={(v) => setCvv(v.slice(0, 3))}
-                    placeholder="•••"
-                  />
+            {/* Summary */}
+            <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 16 }}>
+              <Av name={`${selDoc.firstName} ${selDoc.lastName}`} size={40} />
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>
+                  Dr. {selDoc.firstName} {selDoc.lastName}
+                </div>
+                <div style={{ fontSize: 12, color: C.m }}>
+                  {selApt.date} · {selApt.time}
                 </div>
               </div>
-            )}
+            </div>
 
-            {method === "transfer" && (
-              <Card style={{ background: C.bg }}>
-                {[
-                  ["Bank", "GTBank"],
-                  ["accountName", "HealthBridge Ltd"],
-                  ["accountNumber", "0123456789"],
-                ].map(([k, v]) => (
-                  <div
-                    key={k}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      padding: "7px 0",
-                      fontSize: 13,
-                      borderBottom: `1px solid ${C.b}`,
-                    }}
-                  >
-                    <span
-                      style={{
-                        color: C.m,
-                        fontFamily: "monospace",
-                        fontSize: 11,
-                      }}
-                    >
-                      {k}
-                    </span>
-                    <strong>{v}</strong>
-                  </div>
-                ))}
-              </Card>
-            )}
+            <div style={{
+              background: C.bg,
+              borderRadius: 8,
+              padding: "12px 14px",
+              marginBottom: 16,
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: 14,
+            }}>
+              <span style={{ color: C.m }}>Consultation Fee</span>
+              <strong style={{ color: C.g }}>
+                ₦{(selDoc?.consultationFee || 25000).toLocaleString()}
+              </strong>
+            </div>
+
+            <div style={{ fontSize: 12, color: C.m, marginBottom: 16, textAlign: "center" }}>
+              🔒 Secured by Paystack. You will be redirected to complete payment.
+            </div>
 
             {err && <Alrt>{err}</Alrt>}
 
-            <div style={{ marginTop: 14 }}>
-              <Btn
-                full
-                sz="lg"
-                onClick={pay}
-                disabled={
-                  processing ||
-                  (method === "card" && (!cardN || !exp || !cvv || !cName))
-                }
-              >
-                {processing ? (
-                  <Spin />
-                ) : (
-                  `Pay ₦${(selDoc?.consultationFee || 25000).toLocaleString()}`
-                )}
-              </Btn>
-            </div>
+            <Btn
+              full
+              sz="lg"
+              onClick={pay}
+              disabled={processing}
+            >
+              {processing ? <Spin /> : `Pay ₦${(selDoc?.consultationFee || 25000).toLocaleString()}`}
+            </Btn>
           </Card>
         </div>
       )}
+      </div>
     </div>
   );
 };
