@@ -22,6 +22,7 @@ type Doctor = {
 
 type DoctorProfile = Doctor & {
   gender?: string;
+  yearsOfExperince?: number;
   consultationSchedule?: {
     availableDays?: Record<
       string,

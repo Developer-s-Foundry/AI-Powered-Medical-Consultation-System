@@ -29,12 +29,16 @@ export const DoctorPaymentsPage = ({ user }: DoctorPaymentsPageProps) => {
   useEffect(() => {
     call(EP.DOCTOR_PAYMENT_DATA(user.id))
       .then((r) => setPd(r.data || r))
-      .catch(() => {});
+      .catch(() => {
+        /* ignore */
+      });
 
-    call(EP.DOCTOR_PAYMENTS(user.id))
+    call(EP.DOCTOR_PAYMENTS)
       .then((r) => setPayments(r.data || r))
-      .catch(() => {});
-  }, []);
+      .catch(() => {
+        /* ignore */
+      });
+  }, [user.id]);
 
   return (
     <div>

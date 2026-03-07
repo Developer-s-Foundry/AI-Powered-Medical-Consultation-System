@@ -31,6 +31,7 @@ export const EP = {
   DOCTOR_UPDATE_DAY: (day: string) =>
     `${GATEWAY}/api/v1/profiles/doctors/schedule/days/${day}`,
   DOCTORS_SEARCH: `${GATEWAY}/api/v1/profiles/doctors/search`,
+  DOCTOR_PAYMENTS: `${GATEWAY}/api/v1/profiles/doctors/payment`,
   DOCTOR_PAYMENT_DATA: (id: string) =>
     `${GATEWAY}/api/v1/profiles/doctors/${id}/payment`,
 

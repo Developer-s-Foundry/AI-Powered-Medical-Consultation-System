@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { C } from "./Shared";
 import { call } from "../api";
 import { EP } from "../config";
@@ -12,7 +12,6 @@ import {
   Bdg,
   Hr,
   Tag,
-  Tbl,
   StatCard,
 } from "./Shared";
 import { SBdg } from "./Shared";
@@ -22,7 +21,29 @@ type PaymentsPageProps = {
   user: AuthUser;
 };
 
+type Payment = {
+  id: string;
+  doctorId?: string;
+  doctorName?: string;
+  amount: number;
+  method?: string;
+  status?: string;
+  createdAt?: string;
+};
+
+type PendingAppointment = {
+  id: string;
+  doctorId?: string;
+  doctorName?: string;
+  date?: string;
+  time?: string;
+  consultationFee?: number;
+};
+
 export const PaymentsPage = ({ user }: PaymentsPageProps) => {
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [pending, setPending] = useState<PendingAppointment | null>(null);
+  const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
   const [method, setMethod] = useState("card");
   const [cardN, setCardN] = useState("");
@@ -33,30 +54,55 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
   const [ok, setOk] = useState("");
   const [err, setErr] = useState("");
 
-  const docMap = Object.fromEntries(MOCK_DB.doctors.map((d) => [d.id, d]));
-  const selApt = MOCK_DB.appointments[0];
-  const selDoc = docMap[selApt?.doctorId];
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const r = await call(EP.PAYMENT_INTENT.replace("/create-intent", ""));
+        const list = r.data?.payments || r.data || r.payments || [];
+        setPayments(list);
+
+        // find first unpaid appointment
+        const unpaid = list.find((p: Payment) => p.status === "pending");
+        if (unpaid) setPending(unpaid);
+      } catch {
+        setPayments([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const totalPaid = payments
+    .filter((p) => p.status === "completed" || p.status === "success")
+    .reduce((sum, p) => sum + Number(p.amount), 0);
+
+  const totalPending = payments
+    .filter((p) => p.status === "pending")
+    .reduce((sum, p) => sum + Number(p.amount), 0);
 
   const pay = async () => {
+    if (!pending) return;
     setProcessing(true);
     setErr("");
     const body = {
       patientId: user.id,
-      doctorId: selApt.doctorId,
-      appointmentId: selApt.id,
-      amount: selDoc?.consultationFee || 25000,
+      doctorId: pending.doctorId,
+      appointmentId: pending.id,
+      amount: pending.consultationFee || 0,
       currency: "NGN",
       paymentMethod: method,
     };
     try {
-      if (!USE_MOCK) await call(EP.PAYMENT_INTENT, "POST", body);
-      setTimeout(() => {
-        setProcessing(false);
-        setModal(false);
-        setOk("✅ Payment successful! Appointment confirmed.");
-      }, 1500);
-    } catch (e: any) {
-      setErr(e.message);
+      await call(EP.PAYMENT_INTENT, "POST", body);
+      setProcessing(false);
+      setModal(false);
+      setOk("✅ Payment successful! Appointment confirmed.");
+      // refresh
+      setPending(null);
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "Payment failed");
       setProcessing(false);
     }
   };
@@ -68,8 +114,7 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
           Payments
         </h1>
         <div style={{ marginTop: 4, display: "flex", gap: 6 }}>
-          <Tag method="POST" path="/api/v1/payment/create-intent" />
-          <Tag method="POST" path="/api/v1/webhooks/stripe" />
+          <Tag method="POST" path="/api/v1/payments/create-intent" />
         </div>
       </div>
 
@@ -86,16 +131,18 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
         <StatCard
           icon="💳"
           label="totalPaid"
-          value="₦40,000"
+          value={`₦${totalPaid.toLocaleString()}`}
           c={C.g}
           bg={C.gl}
         />
-        <StatCard icon="⏳" label="pending" value="₦15,000" c={C.w} bg={C.wl} />
         <StatCard
-          icon="📋"
-          label="transactions"
-          value={MOCK_DB.payments.length}
+          icon="⏳"
+          label="pending"
+          value={`₦${totalPending.toLocaleString()}`}
+          c={C.w}
+          bg={C.wl}
         />
+        <StatCard icon="📋" label="transactions" value={payments.length} />
       </div>
 
       <div
@@ -105,32 +152,56 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>
             Transaction History
           </div>
-          <Tbl
-            cols={[
-              {
-                k: "doctor",
-                r: (r) => {
-                  const d = docMap[r.doctorId];
-                  return d ? `Dr. ${d.firstName} ${d.lastName}` : "—";
-                },
-              },
-              {
-                k: "amount",
-                r: (r) => (
-                  <span style={{ fontWeight: 700, color: C.g }}>
-                    ₦{r.amount.toLocaleString()}
-                  </span>
-                ),
-              },
-              { k: "method", r: (r) => <Bdg>{r.method}</Bdg> },
-              { k: "createdAt" },
-              { k: "status", r: (r) => SBdg(r.status) },
-            ]}
-            rows={MOCK_DB.payments}
-          />
+          {loading && (
+            <div style={{ fontSize: 13, color: C.m }}>
+              Loading transactions…
+            </div>
+          )}
+          {!loading && payments.length === 0 && (
+            <div style={{ fontSize: 13, color: C.m, padding: 12 }}>
+              No transactions yet. Book an appointment to get started.
+            </div>
+          )}
+          {!loading && payments.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {payments.map((p) => (
+                <div
+                  key={p.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    background: C.bg,
+                    borderRadius: 8,
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 13 }}>
+                      {p.doctorName ? `Dr. ${p.doctorName}` : "Consultation"}
+                    </div>
+                    <div style={{ fontSize: 12, color: C.m }}>
+                      {p.createdAt
+                        ? new Date(p.createdAt).toLocaleDateString()
+                        : "—"}
+                    </div>
+                  </div>
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 10 }}
+                  >
+                    <span style={{ fontWeight: 700, color: C.g }}>
+                      ₦{Number(p.amount).toLocaleString()}
+                    </span>
+                    {p.method && <Bdg>{p.method}</Bdg>}
+                    {SBdg(p.status)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
 
-        {selDoc && (
+        {pending && (
           <Card>
             <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 10 }}>
               Pending Payment
@@ -143,13 +214,15 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
                 marginBottom: 10,
               }}
             >
-              <Av name={`${selDoc.firstName} ${selDoc.lastName}`} size={36} />
+              <Av name={pending.doctorName || "Doctor"} size={36} />
               <div>
                 <div style={{ fontWeight: 600, fontSize: 13 }}>
-                  Dr. {selDoc.firstName} {selDoc.lastName}
+                  {pending.doctorName
+                    ? `Dr. ${pending.doctorName}`
+                    : "Consultation"}
                 </div>
                 <div style={{ fontSize: 12, color: C.m }}>
-                  {selApt.date} · {selApt.time}
+                  {pending.date} {pending.time ? `· ${pending.time}` : ""}
                 </div>
               </div>
             </div>
@@ -162,17 +235,34 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
               }}
             >
               <span style={{ color: C.m }}>consultationFee</span>
-              <strong>₦{selDoc.consultationFee.toLocaleString()}</strong>
+              <strong>
+                ₦{Number(pending.consultationFee || 0).toLocaleString()}
+              </strong>
             </div>
             <Btn full onClick={() => setModal(true)}>
               Pay Now
             </Btn>
           </Card>
         )}
+
+        {!pending && !loading && (
+          <Card>
+            <div
+              style={{
+                fontSize: 13,
+                color: C.m,
+                textAlign: "center",
+                padding: "20px 0",
+              }}
+            >
+              No pending payments.
+            </div>
+          </Card>
+        )}
       </div>
 
       {/* Payment Modal */}
-      {modal && (
+      {modal && pending && (
         <div
           style={{
             position: "fixed",
@@ -208,10 +298,9 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
               </button>
             </div>
 
-            <Tag method="POST" path="/api/v1/payment/create-intent" />
+            <Tag method="POST" path="/api/v1/payments/create-intent" />
             <Hr />
 
-            {/* Method selector */}
             <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
               {[
                 { v: "card", l: "💳 Card" },
@@ -341,7 +430,7 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
                 {processing ? (
                   <Spin />
                 ) : (
-                  `Pay ₦${(selDoc?.consultationFee || 25000).toLocaleString()}`
+                  `Pay ₦${Number(pending.consultationFee || 0).toLocaleString()}`
                 )}
               </Btn>
             </div>

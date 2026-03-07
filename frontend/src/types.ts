@@ -18,12 +18,6 @@ export type Address = {
   coordinates?: { lat: number; lng: number };
 };
 
-export type NearbyPharmacy = {
-  lat: number;
-  lng: number;
-  [key: string]: unknown;
-};
-
 // ─── Patient ──────────────────────────────────────────────────────────────────
 
 export type PatientProfile = {
@@ -78,6 +72,21 @@ export type PharmacyProfile = {
   isVerified?: boolean;
   role?: Role;
   [key: string]: unknown;
+};
+
+export type NearbyPharmacy = {
+  id: string;
+  lat: number;
+  lng: number;
+  pharmacyName?: string;
+  address?: string;
+  phone?: string;
+  operationDays?: string;
+  drugs?: string[];
+  rating?: number;
+  deliveryAvailable?: boolean;
+  isVerified?: boolean;
+  distance?: number;
 };
 
 // ─── Union ────────────────────────────────────────────────────────────────────

@@ -77,7 +77,9 @@ export const ManageDrugsPage = () => {
     try {
       const r = await call(`${EP.DRUG_SEARCH}?medicineName=${q}`);
       setDrugs(r.data?.drugs || r.drugs || []);
-    } catch {}
+    } catch {
+      //ignore
+    }
   };
 
   const clearSearch = async () => {
@@ -85,7 +87,9 @@ export const ManageDrugsPage = () => {
     try {
       const r = await call(`${EP.DRUG_SEARCH}?medicineName=`);
       setDrugs(r.data?.drugs || r.drugs || []);
-    } catch {}
+    } catch {
+      //ignore
+    }
   };
 
   return (

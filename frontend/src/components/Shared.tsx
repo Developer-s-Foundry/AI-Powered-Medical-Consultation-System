@@ -430,13 +430,7 @@ export const Tag = ({ method, path }: TagProps) => {
   );
 };
 
-export const StatCard = ({
-  icon,
-  label,
-  value,
-  c = C.p,
-  bg = C.pl,
-}: StatCardProps) => (
+export const StatCard = ({ icon, label, value, bg = C.pl }: StatCardProps) => (
   <Card p={16}>
     <div
       style={{

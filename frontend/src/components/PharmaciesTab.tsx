@@ -20,7 +20,7 @@ export const PharmaciesTab = ({
   locLabel,
   onRequestLocation,
 }: PharmaciesTabProps) => {
-  const [nearbyPharms, setNearbyPharms] = useState<any[]>([]);
+  const [nearbyPharms, setNearbyPharms] = useState<NearbyPharmacy[]>([]);
   const [pharmLoading, setPharmLoading] = useState(false);
   const [pharmDrug, setPharmDrug] = useState("");
 
@@ -206,7 +206,7 @@ export const PharmaciesTab = ({
                         📍 {ph.address}
                       </div>
                       <div style={{ fontSize: 12, color: C.m }}>
-                        📞 {ph.phoneNumber} · ⏰ {ph.operatingHours}
+                        📞 {ph.phone} · ⏰ {ph.operationDays}
                       </div>
                     </div>
                     <div
@@ -313,7 +313,9 @@ export const PharmaciesTab = ({
 
                   <Hr my={10} />
                   <div style={{ display: "flex", gap: 8 }}>
-                    <Btn sz="sm">Get Directions</Btn>
+                    <Btn sz="sm" onClick={() => {}}>
+                      Get Directions
+                    </Btn>
                     <Btn sz="sm" v="secondary" onClick={() => {}}>
                       📞 Call Pharmacy
                     </Btn>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { C } from "./Shared";
 import { EP } from "../config";
@@ -56,7 +56,7 @@ type Appointment = {
 
 export const DoctorDashboard = ({ profile }: DoctorDashboardProps) => {
   const navigate = useNavigate();
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [appointments] = useState<Appointment[]>([]);
   const [availableDays, setAvailableDays] = useState<AvailableDays>(
     () => profile.consultationSchedule?.availableDays ?? defaultDays(), // ✅ lazy initializer
   );
@@ -65,11 +65,11 @@ export const DoctorDashboard = ({ profile }: DoctorDashboardProps) => {
   const [savingSchedule, setSavingSchedule] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
 
-  useEffect(() => {
-    call(EP.DOCTOR_APPOINTMENTS)
-      .then((r) => setAppointments(r.data || r))
-      .catch(() => setAppointments([]));
-  }, []);
+  //useEffect(() => {
+  //call()
+  //  .then((r) => setAppointments(r.data || r))
+  //  .catch(() => setAppointments([]));
+  // }, []);
 
   const toggleDay = (day: string) =>
     setAvailableDays((p) => ({
