@@ -43,7 +43,7 @@ export type DoctorProfile = {
   gender?: string;
   specialty?: string;
   licenseNumber?: string;
-  yearsOfExperience?: string;
+  yearsOfExperience?: number | undefined;
   hospitalName?: string;
   consultationFee?: number;
   address?: Address;
