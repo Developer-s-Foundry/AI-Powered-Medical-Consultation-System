@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 import path from "path";
 
-// Load environment variables
 dotenv.config({ path: path.join(__dirname, "../../.env") });
 
 interface Config {
@@ -24,12 +23,8 @@ interface Config {
     exchange: string;
   };
   email: {
-    host: string;
-    port: number;
-    secure: boolean;
-    user: string;
-    password: string;
     from: string;
+    sendgridApiKey: string;
   };
   sms: {
     accountSid?: string;
@@ -66,12 +61,8 @@ const config: Config = {
     exchange: process.env.RABBITMQ_EXCHANGE || "health-bridge-events",
   },
   email: {
-    host: process.env.EMAIL_HOST || "smtp.gmail.com",
-    port: parseInt(process.env.EMAIL_PORT || "587"),
-    secure: process.env.EMAIL_SECURE === "true",
-    user: process.env.EMAIL_USER!,
-    password: process.env.EMAIL_PASSWORD!,
     from: process.env.EMAIL_FROM || "Health Bridge <noreply@healthbridge.com>",
+    sendgridApiKey: process.env.SENDGRID_API_KEY!,
   },
   sms: {
     accountSid: process.env.TWILIO_ACCOUNT_SID,
@@ -88,8 +79,7 @@ const config: Config = {
   },
 };
 
-// Validate required environment variables
-const requiredEnvVars = ["DATABASE_URL", "EMAIL_USER", "EMAIL_PASSWORD"];
+const requiredEnvVars = ["DATABASE_URL", "SENDGRID_API_KEY", "EMAIL_FROM"];
 
 requiredEnvVars.forEach((envVar) => {
   if (!process.env[envVar]) {

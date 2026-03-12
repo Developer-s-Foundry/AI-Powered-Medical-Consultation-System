@@ -7,8 +7,7 @@ import { DoctorProvider } from "./components/DoctorProvider.ts";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <DoctorProvider>
-         <App />
+      <App />
     </DoctorProvider>
- 
   </StrictMode>,
 );

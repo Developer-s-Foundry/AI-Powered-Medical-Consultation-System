@@ -1,22 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { C } from "./Shared";
 import { call } from "../api";
 import { EP } from "../config";
-import { MOCK_DB } from "./MockData";
-import PaystackPop from '@paystack/inline-js'
-import {
-  Card,
-  Btn,
-  Alrt,
-  Spin,
-  Av,
-  Bdg,
-  Hr,
-  Tag,
-  Tbl,
-  StatCard,
-} from "./Shared";
+import PaystackPop from "@paystack/inline-js";
+import { Card, Btn, Alrt, Spin, Av, Bdg, Hr, Tag, StatCard } from "./Shared";
 import { SBdg } from "./Shared";
 import type { AuthUser } from "./Shared";
 import { useDoctorContext } from "./DoctorProvider";
@@ -25,87 +13,103 @@ type PaymentsPageProps = {
   user: AuthUser;
 };
 
+type Payment = {
+  id: string;
+  doctorId?: string;
+  doctorName?: string;
+  amount: number;
+  method?: string;
+  status?: string;
+  createdAt?: string;
+};
+
+type PendingAppointment = {
+  id: string;
+  doctorId?: string;
+  doctorName?: string;
+  date?: string;
+  time?: string;
+  consultationFee?: number;
+};
+
 export const PaymentsPage = ({ user }: PaymentsPageProps) => {
+  const navigate = useNavigate();
+  const { doctor } = useDoctorContext();
+
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [pending, setPending] = useState<PendingAppointment | null>(null);
+  const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
   const [ok, setOk] = useState("");
   const [err, setErr] = useState("");
-  const [processing, setProcessing] = useState(false)
-  const docMap = Object.fromEntries(MOCK_DB.doctors.map((d) => [d.id, d]));
-  const selApt = MOCK_DB.appointments[0];
-  const selDoc = docMap[selApt?.doctorId]; //th
-  const {doctor} = useDoctorContext();
-  const navigate = useNavigate()
+  const [processing, setProcessing] = useState(false);
 
-// get all the doctors that have been booked successfully by a patient in the past
+  useEffect(() => {
+    const fetchPayments = async () => {
+      setLoading(true);
+      try {
+        const res = await call(
+          `${EP.PAYMENT_INITIATE.replace("/create-intent", "")}?patientId=${user.id}`,
+        );
+        const list: Payment[] =
+          res.data?.payments || res.data || res.payments || [];
+        setPayments(list);
+        const unpaid = list.find((p) => p.status === "pending");
+        if (unpaid) setPending(unpaid);
+      } catch {
+        /* ignored */
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPayments();
+  }, [user.id]);
 
-// get all the payments related to patient
-// get the current amount patient is to pay
-// get the total sum of all their payment
-// handle the success page
-// set up my paystack profile completely to enable live payment
-// update appointment table
-// test the payment service
-// research 
+  const totalPaid = payments
+    .filter((p) => p.status === "completed" || p.status === "success")
+    .reduce((sum, p) => sum + Number(p.amount), 0);
 
+  const totalPending = payments
+    .filter((p) => p.status === "pending")
+    .reduce((sum, p) => sum + Number(p.amount), 0);
 
   const pay = async () => {
     setProcessing(true);
     setErr("");
 
-    const body = {
-      patientId: user.id,
-      doctor_id: doctor?.doctor_id,
-    amount: doctor?.fee,
-    provider_name: 'paystack',
-    }
-
-  try {
-      // 1. Call backend to initialise transaction with Paystack
+    try {
       const res = await call(EP.PAYMENT_INITIATE, "POST", {
-          body
+        patientId: user.id,
+        doctor_id: doctor?.doctor_id,
+        amount: doctor?.fee,
+        provider_name: "paystack",
       });
 
       if (!res.success) {
-        setErr("Failed to initiate payment")
-
+        setErr("Failed to initiate payment");
+        setProcessing(false);
+        return;
       }
 
-      const { access_code} = res;
-
-      // 2. Open Paystack popup using access_code from backend
+      const { access_code } = res;
       const popup = new PaystackPop();
 
       popup.resumeTransaction(access_code, {
-
-        // 3. Payment was successful
         onSuccess: async (transaction: { reference: string }) => {
           try {
-            // 4. Verify on backend — never trust frontend alone
             const verification = await call(
               `${EP.PAYMENT_VERIFY}/${transaction.reference}`,
               "POST",
-              {}
+              {},
             );
-
             if (verification.success) {
               setModal(false);
               setOk("✅ Payment successful! Appointment confirmed.");
-
-              // 5. Redirect to success page after short delay
               setTimeout(() => {
                 navigate("/payment/success", {
                   state: {
                     reference: transaction.reference,
-                    amount: selDoc?.consultationFee || 25000,
-                    doctor: {
-                      name: `Dr. ${selDoc?.firstName} ${selDoc?.lastName}`,
-                      specialty: selDoc?.specialty || "General Practice",
-                    },
-                    appointment: {
-                      date: selApt?.date,
-                      time: selApt?.time,
-                      id: selApt?.id,
-                    },
+                    amount: doctor?.fee,
                     paidAt: new Date().toISOString(),
                   },
                 });
@@ -119,16 +123,13 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
             setProcessing(false);
           }
         },
-
-        // Payment was cancelled by patient
         onCancel: () => {
           setProcessing(false);
           setErr("Payment was cancelled.");
         },
       });
-
-    } catch (e: any) {
-      setErr(e.message || "Something went wrong. Please try again.");
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "Something went wrong.");
       setProcessing(false);
     }
   };
@@ -157,54 +158,80 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
       >
         <StatCard
           icon="💳"
-          label="totalPaid" 
-          value="₦40,000" // total amount paid by patient
+          label="totalPaid"
+          value={`₦${totalPaid.toLocaleString()}`}
           c={C.g}
           bg={C.gl}
         />
-        <StatCard icon="⏳" label="pending" 
-        value="₦15,000" // amount being paid but pending
-        c={C.w} bg={C.wl} />
         <StatCard
-          icon="📋"
-          label="transactions" 
-          value={MOCK_DB.payments.length} // total transaction made by customer
+          icon="⏳"
+          label="pending"
+          value={`₦${totalPending.toLocaleString()}`}
+          c={C.w}
+          bg={C.wl}
         />
+        <StatCard icon="📋" label="transactions" value={payments.length} />
       </div>
 
       <div
         style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 20 }}
       >
+        {/* Transaction History */}
         <Card>
           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>
             Transaction History
           </div>
-          <Tbl
-            cols={[
-              {
-                k: "doctorId",
-                r: (r) => {
-                  const d = docMap[r.doctorId];
-                  return d ? `Dr. ${d.firstName} ${d.lastName}` : "—";
-                },
-              },
-              {
-                k: "amount",
-                r: (r) => (
-                  <span style={{ fontWeight: 700, color: C.g }}>
-                    ₦{r.amount.toLocaleString()}
-                  </span>
-                ),
-              },
-              { k: "method", r: (r) => <Bdg>{r.method}</Bdg> },
-              { k: "createdAt" },
-              { k: "status", r: (r) => SBdg(r.status) },
-            ]}
-            rows={MOCK_DB.payments}
-          />
+          {loading && (
+            <div style={{ fontSize: 13, color: C.m }}>
+              Loading transactions…
+            </div>
+          )}
+          {!loading && payments.length === 0 && (
+            <div style={{ fontSize: 13, color: C.m, padding: 12 }}>
+              No transactions yet.
+            </div>
+          )}
+          {!loading && payments.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {payments.map((p) => (
+                <div
+                  key={p.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    background: C.bg,
+                    borderRadius: 8,
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 13 }}>
+                      {p.doctorName ? `Dr. ${p.doctorName}` : "Consultation"}
+                    </div>
+                    <div style={{ fontSize: 12, color: C.m }}>
+                      {p.createdAt
+                        ? new Date(p.createdAt).toLocaleDateString()
+                        : "—"}
+                    </div>
+                  </div>
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 10 }}
+                  >
+                    <span style={{ fontWeight: 700, color: C.g }}>
+                      ₦{Number(p.amount).toLocaleString()}
+                    </span>
+                    {p.method && <Bdg>{p.method}</Bdg>}
+                    {SBdg(p.status)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
 
-        {selDoc && (
+        {/* Pending Payment */}
+        {pending ? (
           <Card>
             <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 10 }}>
               Pending Payment
@@ -217,13 +244,15 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
                 marginBottom: 10,
               }}
             >
-              <Av name={`${selDoc.firstName} ${selDoc.lastName}`} size={36} />
+              <Av name={pending.doctorName || "Doctor"} size={36} />
               <div>
                 <div style={{ fontWeight: 600, fontSize: 13 }}>
-                  Dr. {selDoc.firstName} {selDoc.lastName}
+                  {pending.doctorName
+                    ? `Dr. ${pending.doctorName}`
+                    : "Consultation"}
                 </div>
                 <div style={{ fontSize: 12, color: C.m }}>
-                  {selApt.date} · {selApt.time}
+                  {pending.date} {pending.time ? `· ${pending.time}` : ""}
                 </div>
               </div>
             </div>
@@ -236,35 +265,58 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
               }}
             >
               <span style={{ color: C.m }}>consultationFee</span>
-              <strong>₦{selDoc.consultationFee.toLocaleString()}</strong>
+              <strong>
+                ₦{Number(pending.consultationFee || 0).toLocaleString()}
+              </strong>
             </div>
             <Btn full onClick={() => setModal(true)}>
               Pay Now
             </Btn>
           </Card>
+        ) : (
+          <Card>
+            <div
+              style={{
+                fontSize: 13,
+                color: C.m,
+                textAlign: "center",
+                padding: "20px 0",
+              }}
+            >
+              No pending payments.
+            </div>
+          </Card>
         )}
+      </div>
 
-         {/* Payment Modal */}
+      {/* Payment Modal */}
       {modal && (
-        <div style={{
-          position: "fixed",
-          inset: 0,
-          background: "rgba(0,0,0,.45)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 200,
-        }}>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 200,
+          }}
+        >
           <Card style={{ width: 420 }}>
-            <div style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 14,
-            }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 14,
+              }}
+            >
               <strong style={{ fontSize: 15 }}>Complete Payment</strong>
               <button
-                onClick={() => { setModal(false); setErr(""); }}
+                onClick={() => {
+                  setModal(false);
+                  setErr("");
+                }}
                 style={{
                   background: "none",
                   border: "none",
@@ -280,52 +332,68 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
             <Tag method="POST" path="/api/v1/payment/initiate-payment" />
             <Hr />
 
-            {/* Summary */}
-            <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 16 }}>
-              <Av name={`${selDoc.firstName} ${selDoc.lastName}`} size={40} />
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
+              <Av name={pending?.doctorName || "Doctor"} size={40} />
               <div>
                 <div style={{ fontWeight: 600, fontSize: 13 }}>
-                  Dr. {selDoc.firstName} {selDoc.lastName}
+                  {pending?.doctorName
+                    ? `Dr. ${pending.doctorName}`
+                    : "Consultation"}
                 </div>
                 <div style={{ fontSize: 12, color: C.m }}>
-                  {selApt.date} · {selApt.time}
+                  {pending?.date} {pending?.time ? `· ${pending.time}` : ""}
                 </div>
               </div>
             </div>
 
-            <div style={{
-              background: C.bg,
-              borderRadius: 8,
-              padding: "12px 14px",
-              marginBottom: 16,
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: 14,
-            }}>
+            <div
+              style={{
+                background: C.bg,
+                borderRadius: 8,
+                padding: "12px 14px",
+                marginBottom: 16,
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: 14,
+              }}
+            >
               <span style={{ color: C.m }}>Consultation Fee</span>
               <strong style={{ color: C.g }}>
-                ₦{(selDoc?.consultationFee || 25000).toLocaleString()}
+                ₦{Number(pending?.consultationFee || 0).toLocaleString()}
               </strong>
             </div>
 
-            <div style={{ fontSize: 12, color: C.m, marginBottom: 16, textAlign: "center" }}>
-              🔒 Secured by Paystack. You will be redirected to complete payment.
+            <div
+              style={{
+                fontSize: 12,
+                color: C.m,
+                marginBottom: 16,
+                textAlign: "center",
+              }}
+            >
+              🔒 Secured by Paystack. You will be redirected to complete
+              payment.
             </div>
 
             {err && <Alrt>{err}</Alrt>}
 
-            <Btn
-              full
-              sz="lg"
-              onClick={pay}
-              disabled={processing}
-            >
-              {processing ? <Spin /> : `Pay ₦${(selDoc?.consultationFee || 25000).toLocaleString()}`}
+            <Btn full sz="lg" onClick={pay} disabled={processing}>
+              {processing ? (
+                <Spin />
+              ) : (
+                `Pay ₦${Number(pending?.consultationFee || 0).toLocaleString()}`
+              )}
             </Btn>
           </Card>
         </div>
       )}
-      </div>
     </div>
   );
 };

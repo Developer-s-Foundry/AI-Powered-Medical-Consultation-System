@@ -102,7 +102,7 @@ class App {
     });
 
     // API routes
-    this.app.use("/api", routes);
+    this.app.use("/api/v1/profiles", routes);
 
     // 404 handler - must be after all routes
     this.app.use((req: Request, res: Response) => {

@@ -1,4 +1,3 @@
-// notification-service/src/controllers/NotificationController.ts
 import { Request, Response } from "express";
 import notificationService from "../services/NotificationService";
 import logger from "../utils/logger";
@@ -16,20 +15,12 @@ export class NotificationController {
         { limit, offset },
       );
 
-      res.json({ success: true, data: result }); // { rows, count }
+      res.json({ success: true, data: result });
     } catch (error) {
       logger.error("Error fetching notifications:", error);
-<<<<<<< HEAD
       res
         .status(500)
         .json({ success: false, message: "Failed to fetch notifications" });
-=======
-      res.status(500).json({
-        success: false,
-        message: (error as Error).message,
-        stack: (error as Error).stack,
-      });
->>>>>>> main
     }
   };
 

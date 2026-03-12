@@ -135,7 +135,7 @@ export class NotificationService {
         id: uuidv4(),
         notificationId: notification.id,
         status: DeliveryStatus.PENDING,
-        provider: DeliveryProvider.NODEMAILER,
+        provider: DeliveryProvider.SENDGRID,
         retryCount: 0,
         attemptedAt: new Date(),
       });

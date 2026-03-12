@@ -1,35 +1,39 @@
-import nodemailer, { Transporter } from "nodemailer";
+import sgMail from "@sendgrid/mail";
 import logger from "../utils/logger";
 
-interface EmailConfig {
-  host: string;
-  port: number;
-  secure: boolean;
-  auth: {
-    user: string;
-    pass: string;
-  };
+const apiKey = process.env.SENDGRID_API_KEY;
+
+if (!apiKey) {
+  logger.error("Missing SENDGRID_API_KEY environment variable");
+} else {
+  sgMail.setApiKey(apiKey);
+  logger.info("SendGrid email client ready");
 }
 
-const emailConfig: EmailConfig = {
-  host: process.env.EMAIL_HOST || "smtp.gmail.com",
-  port: parseInt(process.env.EMAIL_PORT || "587"),
-  secure: process.env.EMAIL_SECURE === "true",
-  auth: {
-    user: process.env.EMAIL_USER!,
-    pass: process.env.EMAIL_PASSWORD!,
-  },
+export interface SendEmailOptions {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+  from?: string;
+}
+
+export const sendEmail = async (options: SendEmailOptions): Promise<void> => {
+  const msg = {
+    to: options.to,
+    from: options.from || process.env.EMAIL_FROM || "noreply@healthbridge.com",
+    subject: options.subject,
+    html: options.html,
+    ...(options.text && { text: options.text }),
+  };
+
+  try {
+    await sgMail.send(msg);
+    logger.info(`Email sent to ${options.to}: ${options.subject}`);
+  } catch (error) {
+    logger.error(`Failed to send email to ${options.to}:`, error);
+    throw error;
+  }
 };
 
-const transporter: Transporter = nodemailer.createTransport(emailConfig);
-
-// Verify connection
-transporter.verify((error) => {
-  if (error) {
-    logger.error(" Email configuration error:", error);
-  } else {
-    logger.info(" Email server ready");
-  }
-});
-
-export default transporter;
+export default sendEmail;

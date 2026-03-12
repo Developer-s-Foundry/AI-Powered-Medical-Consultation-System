@@ -4,9 +4,10 @@ import { C } from "./Shared";
 import { EP } from "../config";
 import { call } from "../api";
 import { Card, Btn, Inp, Av, Bdg, Hr, Tag } from "./Shared";
+import { useDoctorContext } from "./DoctorProvider";
 
 type Doctor = {
-  userId: string; // backend returns userId not id
+  userId: string;
   firstName: string;
   lastName: string;
   specialty: string;
@@ -38,6 +39,7 @@ type DoctorProfile = Doctor & {
 
 export const FindDoctorsPage = () => {
   const navigate = useNavigate();
+  const { setDoctor } = useDoctorContext();
   const [docs, setDocs] = useState<Doctor[]>([]);
   const [q, setQ] = useState("");
   const [spec, setSpec] = useState("");
@@ -63,19 +65,31 @@ export const FindDoctorsPage = () => {
   };
 
   const viewProfile = async (doc: Doctor) => {
-    setSelectedDoc(doc as DoctorProfile); // show immediately with list data
+    setSelectedDoc(doc as DoctorProfile);
     setLoadingProfile(true);
     try {
       const r = await call(EP.PROFILE_GET_DOCTOR_BY_ID(doc.userId));
-      setSelectedDoc(r.data || r); // update with full profile from getProfileById
+      setSelectedDoc(r.data || r);
     } catch {
-      // keep showing list data if full fetch fails
+      /* keep showing list data if full fetch fails */
     } finally {
       setLoadingProfile(false);
     }
   };
 
   const closeModal = () => setSelectedDoc(null);
+
+  const bookDoctor = (doc: DoctorProfile) => {
+    setDoctor({
+      doctor_id: doc.userId,
+      first_name: doc.firstName,
+      last_name: doc.lastName,
+      specialty: doc.specialty,
+      fee: doc.paymentDetails?.consultationFees?.amount || 0,
+    });
+    closeModal();
+    navigate("/payments");
+  };
 
   const getAvailableDays = (doc: DoctorProfile) => {
     const schedule = doc.consultationSchedule?.availableDays;
@@ -154,7 +168,7 @@ export const FindDoctorsPage = () => {
             </div>
             <Hr my={10} />
             <div style={{ display: "flex", gap: 8 }}>
-              <Btn sz="sm" onClick={() => navigate("/appointments")}>
+              <Btn sz="sm" onClick={() => bookDoctor(d as DoctorProfile)}>
                 Book Appointment
               </Btn>
               <Btn sz="sm" v="ghost" onClick={() => viewProfile(d)}>
@@ -190,7 +204,6 @@ export const FindDoctorsPage = () => {
             }}
           >
             <Card>
-              {/* Header */}
               <div
                 style={{
                   display: "flex",
@@ -230,7 +243,6 @@ export const FindDoctorsPage = () => {
                 </div>
               ) : (
                 <>
-                  {/* Avatar + name */}
                   <div
                     style={{
                       display: "flex",
@@ -245,11 +257,7 @@ export const FindDoctorsPage = () => {
                     />
                     <div>
                       <div
-                        style={{
-                          fontWeight: 800,
-                          fontSize: 18,
-                          color: C.t,
-                        }}
+                        style={{ fontWeight: 800, fontSize: 18, color: C.t }}
                       >
                         Dr. {selectedDoc.firstName} {selectedDoc.lastName}
                       </div>
@@ -266,7 +274,6 @@ export const FindDoctorsPage = () => {
 
                   <Hr my={14} />
 
-                  {/* Info grid */}
                   <div
                     style={{
                       display: "grid",
@@ -336,15 +343,8 @@ export const FindDoctorsPage = () => {
                     ))}
                   </div>
 
-                  {/* Actions */}
                   <div style={{ display: "flex", gap: 8 }}>
-                    <Btn
-                      full
-                      onClick={() => {
-                        closeModal();
-                        navigate("/appointments");
-                      }}
-                    >
+                    <Btn full onClick={() => bookDoctor(selectedDoc)}>
                       📅 Book Appointment
                     </Btn>
                     <Btn v="ghost" sz="sm" onClick={closeModal}>
