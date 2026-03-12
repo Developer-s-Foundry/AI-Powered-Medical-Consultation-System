@@ -4,18 +4,66 @@ services:
   user-profile-service:
     build:
       context: .
+      target: development  # swap to 'production' for prod
       dockerfile: dockerfile
     container_name: userprofile-service
     ports:
-      - "${PORT:-3001}:3001"
+      - "${PORT:-3002}:3002"
     env_file:
      - .env
+    volumes:
+      - .:/app                        # hot reload in dev
+      - /app/node_modules             # prevent local node_modules override
     depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
       postgres:
         condition: service_healthy
     restart: unless-stopped
     networks:
-      - authservice-network
+      - microservice-network
+
+# Redis
+  redis:
+    image: redis:7-alpine
+    container_name: healthbridge-redis
+    ports:
+      - "6378:6379"                   # expose for local debugging
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes  # persist data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - microservice-network
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: healthbridge-rabbitmq
+    ports:
+      - "5673:5672"     # AMQP port (for services to connect)
+      - "15673:15672"   # Management UI (http://localhost:15672)
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - microservice-network
+
 
   # PostgreSQL
   postgres:
@@ -34,6 +82,23 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - microservice-network
 
 volumes:
   postgres_data:
+    name: healthbridge-profiles-db-data
+    driver: local
+  redis_data:
+    name: healthbridge-redis-data
+    driver: local
+  rabbitmq_data:
+    name: healthbridge-rabbitmq-data
+    driver: local
+
+networks:
+  microservice-network:
+    name: microservice-network
+    external: true
+    driver: bridge
+
