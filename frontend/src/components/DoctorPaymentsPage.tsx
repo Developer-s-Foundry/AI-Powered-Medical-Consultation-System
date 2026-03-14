@@ -31,7 +31,7 @@ export const DoctorPaymentsPage = ({ user }: DoctorPaymentsPageProps) => {
       .then((r) => setPd(r.data || r))
       .catch(() => {});
 
-    call(EP.DOCTOR_PAYMENTS(user.id))
+    call(EP.DOCTOR_PAYMENT_DATA(user.id))
       .then((r) => setPayments(r.data || r))
       .catch(() => {});
   }, []);

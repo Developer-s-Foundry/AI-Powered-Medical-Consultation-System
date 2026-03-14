@@ -29,6 +29,7 @@ export const EP = {
   DOCTORS_SEARCH: `${GATEWAY}/api/v1/profiles/doctors/search`,
   DOCTOR_PAYMENT_DATA: (id: string) =>
     `${GATEWAY}/api/v1/profiles/doctors/${id}/payment`,
+  DOCTOR_APPOINTMENTS: `${GATEWAY}/api/v1/profiles/doctors/payment`,
 
   // ── Payment Service (via gateway)
   PAYMENT_INITIATE: `${GATEWAY}/api/v1/payments/initiate`,
