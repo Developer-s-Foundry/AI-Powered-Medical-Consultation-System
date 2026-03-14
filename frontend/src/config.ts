@@ -2,7 +2,7 @@
 // SERVICE CONFIGURATION
 // ════════════════════════════════════════════════════════════════════════════
 export const GATEWAY =
-  import.meta.env.VITE_GATEWAY_URL || "http://localhost:3000";
+  import.meta.env.VITE_GATEWAY_URL || "http://localhost:8080";
 
 export const EP = {
   // ── Auth Service (via gateway)
