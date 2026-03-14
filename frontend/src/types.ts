@@ -19,9 +19,18 @@ export type Address = {
 };
 
 export type NearbyPharmacy = {
+  id: string;
+  pharmacyName: string;
+  address: string;
+  phoneNumber: string;
+  operatingHours: string;
   lat: number;
   lng: number;
-  [key: string]: unknown;
+  distance?: number;
+  isVerified: boolean;
+  drugs?: string[];
+  rating?: number;
+  deliveryAvailable?: boolean;
 };
 
 // ─── Patient ──────────────────────────────────────────────────────────────────

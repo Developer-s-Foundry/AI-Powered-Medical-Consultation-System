@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { haversine } from "./Geo";
 
 export type Coords = { lat: number; lng: number };
 export type LocStatus =
