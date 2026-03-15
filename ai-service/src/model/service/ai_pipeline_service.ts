@@ -41,6 +41,7 @@ export class AIPipelineService {
     this.logger.info(`Pipeline start | session=${sessionId}`);
 
     const client = this.getClient(io, socketId);
+    console.log("Client found:", !!client, "socketId:", socketId);
 
     // ── STAGE 1: Call AI
     let rawAIResponse: RawAIResponse;
