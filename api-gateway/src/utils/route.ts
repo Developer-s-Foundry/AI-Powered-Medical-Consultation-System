@@ -5,7 +5,7 @@ export const routingParts = [
     pattern: "/api/v1/payments/*",
     prefix: "",
   },
-  { upstream: "http://localhost:3004", pattern: "/api/v1/auth/*", prefix: "" },
+  { upstream: "http://localhost:3003", pattern: "/api/v1/auth/*", prefix: "" },
   {
     upstream: "http://localhost:2002",
     pattern: "/api/v1/notifications/*",

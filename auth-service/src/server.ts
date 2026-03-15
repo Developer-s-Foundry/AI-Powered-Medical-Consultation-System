@@ -1,14 +1,16 @@
-import "reflect-metadata";
 import dotenv from "dotenv";
+import "reflect-metadata";
+
 dotenv.config();
-import express from "express";
-import { Role } from "./model/entities/roles.entity";
+
+import express, { Request, Response, NextFunction } from "express";
+import swaggerUi from "swagger-ui-express";
+
 import AppDataSource from "./config/database";
 import { Logger } from "./config/logger";
 import { RabbitMQConfig } from "./config/rabbitmq";
-import { Response as ExResponse, Request as ExRequest } from "express";
 import { RegisterRoutes } from "./swagger/routes";
-import swaggerUi from "swagger-ui-express";
+import { Role } from "./model/entities/roles.entity";
 import { config } from "./config/env.config";
 
 process.on("uncaughtException", (error) => {
@@ -24,48 +26,35 @@ process.on("unhandledRejection", (reason) => {
 (async () => {
   const logger = Logger.getInstance();
   const rabbitMQ = new RabbitMQConfig();
-  console.log("2. Logger and RabbitMQ config created");
+  const port = Number(config.PORT) || 3004;
 
-  const port = config.PORT || 3004;
-  const app: express.Application = express();
+  const app = express();
 
+  // --- Middleware ---
   app.use(express.json());
-  console.log("3. Express setup done");
-  app.use((req, res, next) => {
-    console.log("Incoming request:", req.method, req.path);
-    console.log("Body:", JSON.stringify(req.body));
-    console.log("Method:", req.method);
-    console.log("Path:", req.path);
-    console.log("Content-Type:", req.headers["content-type"]);
 
-    console.log("Raw headers:", JSON.stringify(req.headers));
+  app.use((req: Request, _res: Response, next: NextFunction) => {
+    logger.info(`Incoming request: ${req.method} ${req.path}`);
     next();
   });
 
-  RegisterRoutes(app);
+  // --- Routes ---
+  RegisterRoutes(app); // Called once
 
-  // Register Tsoa routes
-  RegisterRoutes(app);
-  console.log("4. Tsoa routes registered");
+  // --- Swagger ---
+  app.use("/docs", swaggerUi.serve, async (_req: Request, res: Response) => {
+    return res.send(
+      swaggerUi.generateHTML(await import("./swagger/swagger.json" as any)),
+    );
+  });
 
-  // Swagger setup
-  app.use(
-    "/docs",
-    swaggerUi.serve,
-    async (_req: ExRequest, res: ExResponse) => {
-      return res.send(
-        swaggerUi.generateHTML(await import("./swagger/swagger.json" as any)),
-      );
-    },
-  );
-  console.log("5. Swagger UI setup done");
-
+  // --- Database ---
   try {
-    console.log("6. Attempting to connect to the database...");
+    logger.info("Connecting to the database...");
     await AppDataSource.initialize();
-    console.log("Database connection established successfully.");
+    logger.info("Database connection established.");
 
-    //Seed roles
+    // Seed roles
     const roleRepository = AppDataSource.getRepository(Role);
     const roles = ["patient", "doctor", "pharmacy"];
     for (const name of roles) {
@@ -74,46 +63,39 @@ process.on("unhandledRejection", (reason) => {
         await roleRepository.save(roleRepository.create({ name }));
       }
     }
-    console.log("Roles seeded successfully.");
-    // Initialize RabbitMQ connection
-    try {
-      console.log("7. Attempting to connect to RabbitMQ...");
-      await rabbitMQ.getConnection();
-      logger.info(" RabbitMQ connection established");
-      console.log("RabbitMQ connection established successfully.");
-    } catch (error) {
-      console.error("RabbitMQ connection failed:", error);
-      logger.warn(" RabbitMQ connection failed, events will not be published");
-      logger.error("RabbitMQ error:", error);
-      // Don't stop the server if RabbitMQ fails
-    }
-
-    console.log("8. Starting the server...");
-
-    // Start the server
-    app.listen(port, '0.0.0.0', () => {
-      logger.logToConsole();
-      logger.info(`Server is running on port ${port}`);
-      console.log(`Server is running on port ${port}`);
-    });
-
-    // Graceful shutdown (ADD THIS)
-    process.on("SIGTERM", async () => {
-      logger.info(" SIGTERM received, shutting down gracefully...");
-      await rabbitMQ.closeConnection();
-      await AppDataSource.destroy();
-      process.exit(0);
-    });
-
-    process.on("SIGINT", async () => {
-      logger.info(" SIGINT received, shutting down gracefully...");
-      await rabbitMQ.closeConnection();
-      await AppDataSource.destroy();
-      process.exit(0);
-    });
+    logger.info("Roles seeded.");
   } catch (error) {
-    logger.error("Error starting server:", error);
-    console.error("Fatal Error:", error);
+    logger.error("Failed to initialize database:", error);
     process.exit(1);
   }
+
+  // --- RabbitMQ ---
+  try {
+    logger.info("Connecting to RabbitMQ...");
+    await rabbitMQ.getConnection();
+    logger.info("RabbitMQ connection established.");
+  } catch (error) {
+    logger.warn("RabbitMQ connection failed — events will not be published.");
+    logger.error("RabbitMQ error:", error);
+    // Non-fatal: server continues without message queue
+  }
+
+  // --- Start Server ---
+  app.listen(port, "0.0.0.0", () => {
+    logger.info(`Server running on port ${port}`);
+  });
+
+  // --- Graceful Shutdown ---
+  const shutdown = async (signal: string) => {
+    logger.info(`${signal} received — shutting down gracefully...`);
+    await rabbitMQ.closeConnection();
+    await AppDataSource.destroy();
+    process.exit(0);
+  };
+
+  process.on("exit", (code) => {
+    console.log(`Process exiting with code: ${code}`);
+  });
+
+  console.log("9. Server fully initialized, keeping process alive...");
 })();
