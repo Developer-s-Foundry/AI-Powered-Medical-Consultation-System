@@ -1,13 +1,14 @@
 import {
   Column,
   CreateDateColumn,
+  Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
 import { RecommendationType } from "../../types/enum.types";
 import { Session } from "./session";
 import { RiskEvent } from "./risk_events";
-
+@Entity()
 export class Recommendation {
   @PrimaryGeneratedColumn("uuid")
   rec_id!: string;

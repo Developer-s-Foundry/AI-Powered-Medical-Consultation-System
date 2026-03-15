@@ -1,30 +1,29 @@
-import { PrimaryGeneratedColumn, Column, ManyToOne} from "typeorm"
-import { AiResponse } from "./ai_responses"
-import { SymptomCode } from "./symptom_code"
+import { PrimaryGeneratedColumn, Column, ManyToOne, Entity } from "typeorm";
+import { AiResponse } from "./ai_responses";
+import { SymptomCode } from "./symptom_code";
 
-
+@Entity()
 export class ResponseSymptom {
-    @PrimaryGeneratedColumn('uuid')
-    id!: string
+  @PrimaryGeneratedColumn("uuid")
+  id!: string;
 
-    @Column({
-    type: 'decimal',
+  @Column({
+    type: "decimal",
     precision: 4,
     scale: 3,
-    })
-    confidence!: string
+  })
+  confidence!: string;
 
-    @Column({
-    type: 'decimal',
+  @Column({
+    type: "decimal",
     precision: 5,
     scale: 2,
-    })
-    applied_weight!: string // default weight * multiplier * confidence
+  })
+  applied_weight!: string; // default weight * multiplier * confidence
 
-    @ManyToOne(() => AiResponse, (ai_response) => ai_response.response_symptom)
-    ai_response!: AiResponse
+  @ManyToOne(() => AiResponse, (ai_response) => ai_response.response_symptom)
+  ai_response!: AiResponse;
 
-    @ManyToOne(() => SymptomCode, (symptom_code) => symptom_code.response_symptom)
-    symptom_code!: SymptomCode
-
+  @ManyToOne(() => SymptomCode, (symptom_code) => symptom_code.response_symptom)
+  symptom_code!: SymptomCode;
 }

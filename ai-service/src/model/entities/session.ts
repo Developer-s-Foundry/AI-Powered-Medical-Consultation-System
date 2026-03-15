@@ -25,14 +25,14 @@ export class Session {
   @CreateDateColumn()
   started_at!: Date;
 
-  @Column()
+  @Column({ nullable: true })
   ended_at!: Date;
 
   @Column({ type: "enum", enum: SessionStatus })
   session_status!: string;
 
-  @Column({ type: "enum", enum: RiskLevel })
-  final_risk_level!: string; //the resolved risk level at session close
+  @Column({ type: "enum", enum: RiskLevel, nullable: true })
+  final_risk_level!: string | null; //the resolved risk level at session close
 
   @OneToMany(() => AiResponse, (ai_response) => ai_response.session)
   ai_response!: AiResponse[];
