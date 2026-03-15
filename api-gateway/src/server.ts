@@ -1,9 +1,10 @@
-import express, { Application } from "express";
 import dotenv from "dotenv";
+dotenv.config();
+import express, { Application } from "express";
+
 import { apiMiddleware } from "./middleware/gateway-middleware";
 import cors from "cors";
 
-dotenv.config();
 const app: Application = express();
 
 // Enable CORS at the very top, before routes/middleware

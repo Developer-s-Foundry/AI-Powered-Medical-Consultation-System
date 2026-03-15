@@ -9,6 +9,7 @@ export const call = async (
     "Content-Type": "application/json",
   };
   const token = session.getToken();
+  console.log("Token being sent:", token?.substring(0, 30));
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   const res = await fetch(url, {
