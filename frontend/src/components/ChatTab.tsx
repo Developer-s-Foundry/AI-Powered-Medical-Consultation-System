@@ -90,23 +90,20 @@ export const ChatTab = ({
     });
 
     // ── Listen for AI triage response ──
-    socket.on("TRIAGE_RESPONSE", (data: TriageResponse) => {
+    socket.on("TRIAGE_RESPONSE", (data) => {
       console.log("TRIAGE_RESPONSE received:", JSON.stringify(data, null, 2));
-      if (data.type === "TRIAGE_RESPONSE") {
-        // this check may also need updating
-        setTriage(data);
-        setMessages((p) => [
-          ...p,
-          { from: "ai", text: data.content, ts: new Date() },
-        ]);
-        if (data.recommendation) {
-          setEnded(true);
-          onShowResults();
-        }
+      // remove the type check — the event name is already "TRIAGE_RESPONSE"
+      setTriage(data);
+      setMessages((p) => [
+        ...p,
+        { from: "ai", text: data.content, ts: new Date() },
+      ]);
+      if (data.recommendation) {
+        setEnded(true);
+        onShowResults();
       }
       setLoading(false);
     });
-
     socket.on("disconnect", () => {
       setConnected(false);
     });
