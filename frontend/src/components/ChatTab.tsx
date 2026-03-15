@@ -91,6 +91,7 @@ export const ChatTab = ({
 
     // ── Listen for AI triage response ──
     socket.on("TRIAGE_RESPONSE", (data: TriageResponse) => {
+      console.log("TRIAGE_RESPONSE received:", JSON.stringify(data, null, 2));
       if (data.type === "TRIAGE_RESPONSE") {
         // this check may also need updating
         setTriage(data);
