@@ -10,7 +10,7 @@ services:
       dockerfile: dockerfile
     container_name: ai-service
     ports:
-      - "${SERVER_PORT:-3003}:3000"
+      - "${SERVER_PORT:-3006}:3000"
     environment:
       NODE_ENV: ${NODE_ENV}
       DB_PORT: ${DB_PORT}
