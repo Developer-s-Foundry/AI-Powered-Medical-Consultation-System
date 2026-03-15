@@ -90,15 +90,14 @@ export const ChatTab = ({
     });
 
     // ── Listen for AI triage response ──
-    socket.on("patient-message", (data: TriageResponse) => {
+    socket.on("TRIAGE_RESPONSE", (data: TriageResponse) => {
       if (data.type === "TRIAGE_RESPONSE") {
+        // this check may also need updating
         setTriage(data);
         setMessages((p) => [
           ...p,
           { from: "ai", text: data.content, ts: new Date() },
         ]);
-
-        // Show doctor/pharmacy CTAs if recommendation exists
         if (data.recommendation) {
           setEnded(true);
           onShowResults();
