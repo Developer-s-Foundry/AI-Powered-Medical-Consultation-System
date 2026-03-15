@@ -35,8 +35,8 @@ const config: Config = {
   app: {
     name: process.env.SERVICE_NAME || "User Profile Service",
     env: process.env.NODE_ENV || "development",
-    port: parseInt(process.env.PORT || "3001"),
-    clientUrl: process.env.CLIENT_URL || "http://localhost:3000",
+    port: parseInt(process.env.PORT || "3007"),
+    clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
   },
   database: {
     url: process.env.DATABASE_URL!,
@@ -51,7 +51,8 @@ const config: Config = {
     exchange: process.env.RABBITMQ_EXCHANGE || "health-bridge-events",
   },
   jwt: {
-    secret: process.env.JWT_SECRET || "your-secret-key-change-in-production",
+    secret:
+      process.env.AUTH_JWT_SECRET || "your-secret-key-change-in-production",
   },
   logging: {
     level: process.env.LOG_LEVEL || "info",

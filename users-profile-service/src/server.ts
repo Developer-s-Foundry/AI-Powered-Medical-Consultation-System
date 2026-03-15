@@ -103,6 +103,7 @@ function setupGracefulShutdown(server: any) {
 
   // Handle uncaught errors
   process.on("unhandledRejection", (reason: any, promise: Promise<any>) => {
+    console.error("UNHANDLED REJECTION:", reason);
     logger.error("");
     logger.error(" UNHANDLED REJECTION:");
     logger.error("Promise:", promise);
@@ -111,6 +112,7 @@ function setupGracefulShutdown(server: any) {
   });
 
   process.on("uncaughtException", (error: Error) => {
+    console.log("UNCAUGHT EXCEPTION:", error);
     logger.error("");
     logger.error("UNCAUGHT EXCEPTION:");
     logger.error(error);
