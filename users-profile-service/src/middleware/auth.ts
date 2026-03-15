@@ -17,30 +17,38 @@ declare global {
 
 /**
  * Authenticate user via JWT token
- */
-export const authenticate = async (
+ */ export const authenticate = async (
   req: Request,
   _res: Response,
   next: NextFunction,
 ) => {
   try {
-    // Get token from header
-    const authHeader = req.headers.authorization;
+    // Accept gateway-forwarded user identity
+    const gatewayUserId = req.headers["x-user-id"] as string;
+    const gatewayUserRole = req.headers["x-user-role"] as string;
 
+    if (gatewayUserId && gatewayUserRole) {
+      req.user = {
+        userId: gatewayUserId,
+        email: "",
+        role: gatewayUserRole,
+      };
+      return next();
+    }
+
+    // Fall back to JWT for direct access
+    const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       throw new AppError("No token provided", 401);
     }
 
     const token = authHeader.substring(7);
-
-    // Verify token
     const decoded = verifyToken(token);
 
     if (!decoded) {
       throw new AppError("Invalid or expired token", 401);
     }
 
-    // Attach user to request
     req.user = {
       userId: decoded.userId,
       email: decoded.email,
@@ -56,7 +64,6 @@ export const authenticate = async (
     }
   }
 };
-
 /**
  * Optional authentication (don't fail if no token)
  */
