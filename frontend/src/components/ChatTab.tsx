@@ -6,7 +6,7 @@ import { session } from "../session";
 import type { Coords } from "./UseLocation";
 
 const AI_SERVICE_URL =
-  import.meta.env.VITE_AI_SERVICE_URL || "http://localhost:3006";
+  import.meta.env.VITE_AI_SERVICE_URL || "http://localhost:3002";
 
 type Message = { from: "ai" | "user"; text: string; ts: Date };
 type AckResponse = {
