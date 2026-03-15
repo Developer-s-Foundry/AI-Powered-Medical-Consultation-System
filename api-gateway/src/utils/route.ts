@@ -17,9 +17,9 @@ export const routingParts = [
     prefix: "/api/drugs",
   },
   {
-    upstream: "http://localhost:3002",
+    upstream: "http://localhost:3007",
     pattern: "/api/v1/profiles/*",
-    prefix: "",
+    prefix: "/api",
   },
   {
     upstream: "http://localhost:2012",
