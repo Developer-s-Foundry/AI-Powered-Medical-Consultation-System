@@ -1,6 +1,17 @@
 import { databaseConfig } from "./env.config";
 import { DataSource } from "typeorm";
-import path from "path";
+import { Session } from "../model/entities/session";
+import { Message } from "../model/entities/messages";
+import { AiResponse } from "../model/entities/ai_responses";
+import { Recommendation } from "../model/entities/recommendation";
+import { RiskEvent } from "../model/entities/risk_events";
+import { SymptomCode } from "../model/entities/symptom_code";
+import { ResponseSymptom } from "../model/entities/response_symptom";
+import { Escalation } from "../model/entities/escalation";
+import { ScoringRule } from "../model/entities/scoring_rule";
+import { Specialty } from "../model/entities/specialty";
+import { SymptomSpecialty } from "../model/entities/symptom_specialty";
+import { Appointment } from "../model/entities/appointment";
 
 const AppDataSource = new DataSource({
   type: "postgres",
@@ -11,8 +22,21 @@ const AppDataSource = new DataSource({
   database: databaseConfig.database,
   synchronize: true,
   logging: false,
-  entities: [path.join(__dirname, "../model/entities/*.{js,ts}")],
-  migrations: [path.join(__dirname, "../migrations/*.{js,ts}")],
+  entities: [
+    Session,
+    Message,
+    AiResponse,
+    Recommendation,
+    RiskEvent,
+    SymptomCode,
+    ResponseSymptom,
+    Escalation,
+    ScoringRule,
+    Specialty,
+    SymptomSpecialty,
+    Appointment,
+  ],
+  migrations: [__dirname + "/../migrations/*.{js,ts}"],
 });
 
 export default AppDataSource;
