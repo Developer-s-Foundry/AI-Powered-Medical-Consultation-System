@@ -23,6 +23,10 @@ class App {
    * Setup middleware
    */
   private setupMiddleware(): void {
+    this.app.use((req: Request, _res: Response, next: NextFunction) => {
+      console.log(`>>> ${req.method} ${req.path}`);
+      next();
+    });
     // Security headers
     this.app.use(helmet());
 
