@@ -84,6 +84,10 @@ export const ChatTab = ({
       setConnError("");
     });
 
+    socket.onAny((event, ...args) => {
+      console.log("Socket event received:", event, args);
+    });
+
     socket.on("connect_error", () => {
       setConnError("Unable to connect to AI service. Please try again.");
       setConnected(false);
