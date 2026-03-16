@@ -12,8 +12,6 @@ import { config } from "../../config/env.config";
 import { AppError } from "../../custom.functions.ts/error";
 import { WeeklySchedule } from "../../types/types.interface";
 
-
-
 export class DoctorMatcher {
   private logger = Logger.getInstance();
   private dataSource: typeof AppDataSource;
@@ -33,7 +31,7 @@ export class DoctorMatcher {
     weightedScore: number;
     dominantSymptom: string;
     specialty: string;
-    recType: "mandatory" | "optional"| null;
+    recType: "mandatory" | "optional" | null;
   }) {
     if (riskLevel === "HIGH") {
       return `HIGH risk triage — ${dominantSymptom} requires immediate specialist review (${specialty}).`;
@@ -85,8 +83,10 @@ export class DoctorMatcher {
     weightedScore,
     riskLevel,
   }: MatchDoctorParams): Promise<RecommendationDetails | null> {
-    this.logger.info(`Matching doctor: recType=${recType} score=${weightedScore}`);
-  
+    this.logger.info(
+      `Matching doctor: recType=${recType} score=${weightedScore}`,
+    );
+
     const responseSymptomRepo = this.dataSource.getRepository(ResponseSymptom);
     const specialtyRepo = this.dataSource.getRepository(SymptomSpecialty);
     const recommendationRepo = this.dataSource.getRepository(Recommendation);
@@ -94,7 +94,7 @@ export class DoctorMatcher {
     // Find dominant symptom
     const dominant = await responseSymptomRepo
       .createQueryBuilder("rs")
-      .leftJoinAndSelect("rs.symptomCode", "sc")
+      .leftJoinAndSelect("rs.symptom_code", "sc")
       .where("rs.ai_response.response_id = :responseId", { responseId })
       .orderBy("rs.applied_weight", "DESC")
       .limit(1)
@@ -164,14 +164,11 @@ export class DoctorMatcher {
 
     if (!doctor) return null;
     // filter doctor available day
-    const allDays: WeeklySchedule  = doctor.consultationSchedule.availableDays;
-    
-    
-    const doctorAvailableDays = Object.fromEntries(Object.entries(allDays).filter(
-      ([_, value]) => value.isAvailable)
-    )
+    const allDays: WeeklySchedule = doctor.consultationSchedule.availableDays;
 
-  
+    const doctorAvailableDays = Object.fromEntries(
+      Object.entries(allDays).filter(([_, value]) => value.isAvailable),
+    );
 
     // subsequently, return array of all the doctors
     return {
@@ -185,7 +182,7 @@ export class DoctorMatcher {
         specialty: doctor.specialty,
         hospitalName: doctor.hospitalName,
         address: doctor.address,
-        availableDays: doctorAvailableDays
+        availableDays: doctorAvailableDays,
       },
     };
   }

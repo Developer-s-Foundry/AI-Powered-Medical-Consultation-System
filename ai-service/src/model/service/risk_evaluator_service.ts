@@ -2,9 +2,12 @@ import { Repository } from "typeorm";
 import { v4 as uuidv4 } from "uuid";
 import { RiskEvent } from "../entities/risk_events";
 import { AiResponse } from "../entities/ai_responses";
-import { Session } from "../entities/session"
+import { Session } from "../entities/session";
 import { Escalation } from "../entities/escalation";
-import { EvaluateRiskParams, EvaluateRiskResult } from "../../types/types.interface";
+import {
+  EvaluateRiskParams,
+  EvaluateRiskResult,
+} from "../../types/types.interface";
 import AppDataSource from "../../config/database";
 import { Logger } from "../../config/logger";
 
@@ -16,12 +19,11 @@ export const THRESHOLDS = {
   MEDIUM_DOCTOR_THRESHOLD: 10.0,
 };
 
-
 export class RiskEvaluatorService {
-    private logger = Logger.getInstance();
-    private dataSource: typeof AppDataSource;
+  private logger = Logger.getInstance();
+  private dataSource: typeof AppDataSource;
   constructor() {
-    this.dataSource = AppDataSource
+    this.dataSource = AppDataSource;
   }
 
   private get riskEventRepo(): Repository<RiskEvent> {
@@ -56,10 +58,10 @@ export class RiskEvaluatorService {
     weightedScore,
   }: EvaluateRiskParams): Promise<EvaluateRiskResult> {
     this.logger.info(
-      `Evaluating risk: level=${riskLevel} score=${weightedScore}`
+      `Evaluating risk: level=${riskLevel} score=${weightedScore}`,
     );
 
-    // ── Decide action based on risk level + score 
+    // ── Decide action based on risk level + score
 
     let action: string;
     let adviceShown: boolean;
@@ -80,8 +82,7 @@ export class RiskEvaluatorService {
         action = "show_advice";
         adviceShown = true;
         adviceUsed = true;
-        needsDoctor =
-          weightedScore > THRESHOLDS.MEDIUM_DOCTOR_THRESHOLD;
+        needsDoctor = weightedScore > THRESHOLDS.MEDIUM_DOCTOR_THRESHOLD;
         recType = needsDoctor ? "optional" : null;
         break;
 
@@ -96,33 +97,33 @@ export class RiskEvaluatorService {
     }
 
     this.logger.info(
-      `action=${action} | adviceShown=${adviceShown} | needsDoctor=${needsDoctor}`
+      `action=${action} | adviceShown=${adviceShown} | needsDoctor=${needsDoctor}`,
     );
 
     // ── create RiskEvent
 
-     const newRiskEvent = this.riskEventRepo.create({
-      ai_response: {response_id: responseId},
-      session: {id: sessionId},
+    const newRiskEvent = this.riskEventRepo.create({
+      ai_response: { response_id: responseId },
+      session: { id: sessionId },
       risk_level: riskLevel,
       weighted_score: weightedScore.toString(),
       action_taken: action,
       advice_shown: adviceShown,
     });
 
-    this.riskEventRepo.save(newRiskEvent)
+    this.riskEventRepo.save(newRiskEvent);
     // ── Update AI response advice_used
 
     await this.aiResponseRepo.update(
       { response_id: responseId },
-      { advice_used: adviceUsed }
+      { advice_used: adviceUsed },
     );
 
-    // ── Update session final risk level 
+    // ── Update session final risk level
 
     await this.sessionRepo.update(
       { id: sessionId },
-      { final_risk_level: riskLevel }
+      { final_risk_level: riskLevel },
     );
 
     // ── Handle Escalation (HIGH only)
@@ -130,10 +131,9 @@ export class RiskEvaluatorService {
     let escalationId: string | null = null;
 
     if (riskLevel === "HIGH") {
-
       const newEscalation = this.escalationRepo.create({
-        risk_event: {id: newRiskEvent.id},
-        session: {id:sessionId},
+        risk_event: { id: newRiskEvent.id },
+        session: { id: sessionId },
         patient_id: patientId,
         escalation_type: "alert",
         notified_at: new Date(),
@@ -144,7 +144,7 @@ export class RiskEvaluatorService {
       // Mark session as escalated
       await this.sessionRepo.update(
         { id: sessionId },
-        { session_status: "escalated" }
+        { session_status: "ESCALATED" },
       );
 
       this.logger.info(`🚨 Escalation created: ${escalationId}`);
