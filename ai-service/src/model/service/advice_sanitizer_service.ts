@@ -11,7 +11,6 @@ import { ReplacementRule } from "../../types/types.interface";
  *   2. Sentence filtering
  */
 
-
 // ─────────────────────────────────────────────────────────────
 // Replacement Rules
 // ─────────────────────────────────────────────────────────────
@@ -41,7 +40,7 @@ const REPLACEMENT_RULES: ReplacementRule[] = [
   {
     pattern:
       /\b(immediately|emergency|urgent(ly)?|call (an )?ambulance|go to (the )?(ER|emergency room|A&E)|dial 999|dial 911)\b/gi,
-    replacement: "see a doctor if symptoms persist",
+    replacement: "promptly",
   },
 
   // Confident diagnostic statements
@@ -94,12 +93,12 @@ export function sanitizeAdvice(rawAdvice: string): string {
 
   const safeSentences: string[] = sentences.filter((sentence) => {
     const isBlocked: boolean = SENTENCE_BLOCK_PATTERNS.some((pattern) =>
-      pattern.test(sentence)
+      pattern.test(sentence),
     );
 
     if (isBlocked) {
       console.log(
-        `✂ Sanitizer removed sentence: "${sentence.slice(0, 60)}..."`
+        `✂ Sanitizer removed sentence: "${sentence.slice(0, 60)}..."`,
       );
     }
 
