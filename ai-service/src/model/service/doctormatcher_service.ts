@@ -54,7 +54,7 @@ export class DoctorMatcher {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${config.GATEWAY_SECRET ?? ""}`,
+            Authorization: `Bearer ${config.GATEWAY_SECRET_KEY ?? ""}`,
           },
           signal: controller.signal,
         },
