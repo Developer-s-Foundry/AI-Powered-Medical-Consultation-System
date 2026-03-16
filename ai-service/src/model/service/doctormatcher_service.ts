@@ -49,12 +49,12 @@ export class DoctorMatcher {
     const timeout = setTimeout(() => controller.abort(), 5000);
     try {
       const response = await fetch(
-        `http://localhost:3000/api/doctors/specialty/${specialty_name}`,
+        `http://localhost:3007/api/doctors/specialty/${specialty_name}`,
         {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${config.GATEWAY_SECRET_KEY ?? ""}`,
+            Authorization: `Bearer ${config.GATEWAY_SECRET ?? ""}`,
           },
           signal: controller.signal,
         },

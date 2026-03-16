@@ -25,7 +25,7 @@ export const config = {
   SERVER_PORT: parseInt(getenv(environment_variables.SERVER_PORT)),
   NODE_ENV: getenv(environment_variables.NODE_ENV),
   AUTH_JWT_SECRET: getenv(environment_variables.AUTH_JWT_SECRET),
-  GATEWAY_SECRET_KEY: getenv(environment_variables.GATEWAY_SECRET_KEY),
+  GATEWAY_SECRET: getenv(environment_variables.GATEWAY_SECRET_KEY),
   PAYSTACK_SECRET_KEY: getenv(environment_variables.PAYSTACK_SECRET_KEY),
   PAYSTACK_BASE_URL: getenv(environment_variables.PAYSTACK_BASE_URL),
   REDIS_HOST: getenv(environment_variables.REDIS_HOST),
