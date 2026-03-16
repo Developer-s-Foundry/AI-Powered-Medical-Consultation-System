@@ -5,7 +5,7 @@ services:
     build:
       context: .
       target: development
-      dockerfile: dockerfile
+
     container_name: userprofile-service
     ports:
       - "${PORT:-3007}:3007"
