@@ -26,7 +26,7 @@ export class Escalation {
   @Column({ type: "timestamp", nullable: true })
   resolved_at!: Date; // when the situation was marked resolved (nullable until resolved)
 
-  @Column({ nullable: true })
+  @Column({ type: "text", nullable: true })
   resolved_by!: string | null; // uuid of the doctor who closed the escalation
 
   @OneToOne(() => RiskEvent, (risk_event) => risk_event.escalation)
