@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -29,9 +30,14 @@ export class Escalation {
   @Column({ type: "text", nullable: true })
   resolved_by!: string | null; // uuid of the doctor who closed the escalation
 
-  @OneToOne(() => RiskEvent, (risk_event) => risk_event.escalation)
-  risk_event!: RiskEvent;
+  //@OneToOne(() => RiskEvent, (risk_event) => risk_event.escalation)
+  //@JoinColumn()
+  //risk_event!: RiskEvent;
 
   @ManyToOne(() => Session, (session) => session.escalation)
   session!: Session;
+
+  @ManyToOne(() => RiskEvent, (riskEvent) => riskEvent.escalations)
+  @JoinColumn()
+  risk_event!: RiskEvent;
 }

@@ -68,7 +68,7 @@ export class RiskEvaluatorService {
     let adviceShown: boolean;
     let adviceUsed: boolean;
     let needsDoctor: boolean;
-    let recType: "mandatory" | "optional" | null;
+    let recType: "MANDATORY" | "OPTIONAL" | null;
 
     switch (riskLevel) {
       case "HIGH":
@@ -76,7 +76,7 @@ export class RiskEvaluatorService {
         adviceShown = false;
         adviceUsed = false;
         needsDoctor = true;
-        recType = "mandatory";
+        recType = "MANDATORY";
         break;
 
       case "MEDIUM":
@@ -84,7 +84,7 @@ export class RiskEvaluatorService {
         adviceShown = true;
         adviceUsed = true;
         needsDoctor = weightedScore > THRESHOLDS.MEDIUM_DOCTOR_THRESHOLD;
-        recType = needsDoctor ? "optional" : null;
+        recType = needsDoctor ? "OPTIONAL" : null;
         break;
 
       case "LOW":

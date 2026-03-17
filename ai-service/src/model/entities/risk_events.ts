@@ -41,7 +41,7 @@ export class RiskEvent {
     () => Recommendation,
     (recommendation) => recommendation.risk_event,
   )
-  recommendation!: RiskEvent;
+  recommendation!: RiskEvent[];
 
   @ManyToOne(() => AiResponse, (ai_response) => ai_response.risk_event)
   ai_response!: AiResponse;
@@ -51,4 +51,7 @@ export class RiskEvent {
 
   @ManyToOne(() => Session, (session) => session.risk_event)
   session!: Session;
+
+  @OneToMany(() => Escalation, (escalation) => escalation.risk_event)
+  escalations!: Escalation[];
 }

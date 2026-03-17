@@ -1,4 +1,3 @@
-
 import { Server } from "socket.io";
 
 export interface patientPayload {
@@ -25,7 +24,7 @@ export interface EvaluateRiskResult {
   adviceShown: boolean;
   adviceUsed: boolean;
   needsDoctor: boolean;
-  recType: "mandatory" | "optional" | null;
+  recType: "MANDATORY" | "OPTIONAL" | null;
   escalationId: string | null;
 }
 
@@ -33,7 +32,7 @@ export interface MatchDoctorParams {
   eventId: string;
   sessionId: string;
   responseId: string;
-  recType: "mandatory" | "optional" | null;
+  recType: "MANDATORY" | "OPTIONAL" | null;
   weightedScore: number;
   riskLevel: string;
 }
@@ -81,32 +80,32 @@ export interface PipelineParams {
 }
 
 export interface RecommendationDetails {
-      recId: string,
-      recType: string | null,
-      reason: string,
-      doctor: {
-        doctorId: string,
-        firstName: string,
-        lastName: string,
-        specialty: string,
-        hospitalName: string,
-        address: string,
-        availableDays: WeeklySchedule
-      },
+  recId: string;
+  recType: string | null;
+  reason: string;
+  doctor: {
+    doctorId: string;
+    firstName: string;
+    lastName: string;
+    specialty: string;
+    hospitalName: string;
+    address: string;
+    availableDays: WeeklySchedule;
+  };
 }
 
 export interface AppointmentParams {
-  patientId: string
-  doctorId: string
-  sessionId: string
-  availableDays: WeeklySchedule
-  reason: string
+  patientId: string;
+  doctorId: string;
+  sessionId: string;
+  availableDays: WeeklySchedule;
+  reason: string;
 }
 
 export interface DaySchedule {
-  isAvailable: boolean,
-  startTime: string,
-  endTime: string
+  isAvailable: boolean;
+  startTime: string;
+  endTime: string;
 }
 
 export type WeeklySchedule = Record<string, DaySchedule>;
@@ -118,18 +117,17 @@ type Doctor = {
 };
 
 export interface AppointmentType {
-  id: string
+  id: string;
   date: string;
   time: string;
   reason: string;
   type: string;
   status: string;
-  doctor: Doctor
-};
+  doctor: Doctor;
+}
 
-
-export interface doctorsData{
-  userId: string
-  firstName: string
-  lastName: string
+export interface doctorsData {
+  userId: string;
+  firstName: string;
+  lastName: string;
 }

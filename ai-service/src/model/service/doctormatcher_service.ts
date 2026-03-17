@@ -31,13 +31,13 @@ export class DoctorMatcher {
     weightedScore: number;
     dominantSymptom: string;
     specialty: string;
-    recType: "mandatory" | "optional" | null;
+    recType: "MANDATORY" | "OPTIONAL" | null;
   }) {
     if (riskLevel === "HIGH") {
       return `HIGH risk triage — ${dominantSymptom} requires immediate specialist review (${specialty}).`;
     }
 
-    if (recType === "optional") {
+    if (recType === "OPTIONAL") {
       return `Weighted score of ${weightedScore.toFixed(1)} exceeded threshold for ${dominantSymptom}. A consultation with ${specialty} is recommended.`;
     }
 
