@@ -5,33 +5,21 @@ import { config } from "../../config/env.config";
 import { GoogleGenAI } from "@google/genai";
 import { Logger } from "../../config/logger";
 
-
-
-
 const CONFIDENCE_THRESHOLD = 0.4;
 
-
-/**
- * Fetches all active symptom codes from the DB and formats them
- * into the system prompt so the AI can map patient language to codes.
- */
 export class AIService {
   private dataSource: typeof AppDataSource;
-  private ai = new GoogleGenAI({apiKey: config.GEMINI_API_KEY});
-  private logger = Logger.getInstance()
+  private ai = new GoogleGenAI({ apiKey: config.GEMINI_API_KEY });
+  private logger = Logger.getInstance();
 
   constructor() {
     this.dataSource = AppDataSource;
   }
 
   private get repository() {
-    
     return this.dataSource.getRepository(SymptomCode);
   }
 
-  /**
-   * Build system prompt from DB symptom codes
-   */
   async buildSystemPrompt(): Promise<string> {
     const codes = await this.repository.find({
       order: {
@@ -45,7 +33,7 @@ export class AIService {
         (c) =>
           `${c.code} | ${c.description} | ICD-10: ${
             c.icd10_ref ?? "N/A"
-          } | severity: ${c.severity_class} | weight: ${c.default_weight}`
+          } | severity: ${c.severity_class} | weight: ${c.default_weight}`,
       )
       .join("\n");
 
@@ -88,54 +76,52 @@ REQUIRED JSON FORMAT:
 (Return ONLY valid JSON in required format.)`;
   }
 
-  /**
-   * Call Gemini
-   */
   async callAI(patientMessage: string): Promise<RawAIResponse> {
+    console.log("callAI called with:", patientMessage.substring(0, 50));
 
     const systemPrompt = await this.buildSystemPrompt();
-
-      const response = await this.ai.models.generateContent({
-          model: "gemini-3-flash-preview",
-          contents: patientMessage,
-          config: {
-            responseMimeType: "application/json",
-            systemInstruction: systemPrompt,
-          },
-        });
-        console.log(response.text);
-
-    if (!response.text) {
-      this.logger.warn('Gemini API error')
-      throw new Error(
-        `Gemini API error`
-      );
-    }
-
-    const cleaned = response.text
-      .replace(/```json\s*/gi, "")
-      .replace(/```\s*/g, "")
-      .trim();
-
-    let parsed: RawAIResponse;
+    console.log("System prompt built, calling Gemini...");
 
     try {
-      parsed = JSON.parse(cleaned);
-    } catch {
-      throw new Error(
-        `AI returned non-JSON response: ${response.text.slice(0, 200)}`
-      );
-    }
+      const response = await this.ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: patientMessage,
+        config: {
+          responseMimeType: "application/json",
+          systemInstruction: systemPrompt,
+        },
+      });
 
-    return parsed;
+      console.log("Gemini response:", response.text);
+
+      if (!response.text) {
+        this.logger.warn("Gemini API returned empty response");
+        throw new Error("Gemini API error");
+      }
+
+      const cleaned = response.text
+        .replace(/```json\s*/gi, "")
+        .replace(/```\s*/g, "")
+        .trim();
+
+      let parsed: RawAIResponse;
+
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch {
+        throw new Error(
+          `AI returned non-JSON response: ${response.text.slice(0, 200)}`,
+        );
+      }
+
+      return parsed;
+    } catch (err) {
+      console.error("Gemini call error:", err);
+      throw err;
+    }
   }
 
-  /**
-   * Validate AI response against DB and schema
-   */
-  async validateAIResponse(
-    aiResponse: RawAIResponse
-  ): Promise<{
+  async validateAIResponse(aiResponse: RawAIResponse): Promise<{
     valid: boolean;
     errors: string[];
     filtered: RawAIResponse | null;
@@ -158,24 +144,17 @@ REQUIRED JSON FORMAT:
       return { valid: false, errors, filtered: null };
     }
 
-    // Fetch valid codes
     const dbCodes = await this.repository.find({
       select: ["code"],
     });
 
     const validCodes = new Set(dbCodes.map((r) => r.code));
 
-    const filteredCodes = aiResponse.symptom_codes.filter(
-      (item) => {
-        if (item.confidence < CONFIDENCE_THRESHOLD) {
-          return false;
-        }
-        if (!validCodes.has(item.code)) {
-          return false;
-        }
-        return true;
-      }
-    );
+    const filteredCodes = aiResponse.symptom_codes.filter((item) => {
+      if (item.confidence < CONFIDENCE_THRESHOLD) return false;
+      if (!validCodes.has(item.code)) return false;
+      return true;
+    });
 
     return {
       valid: true,

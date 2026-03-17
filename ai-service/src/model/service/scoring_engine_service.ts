@@ -1,5 +1,3 @@
-
-
 /**
  * Scoring Engine
  *
@@ -20,15 +18,13 @@ import { SymptomInput } from "../../types/types.interface";
 import AppDataSource from "../../config/database";
 import { Logger } from "../../config/logger";
 
-
-
 export class ScoringService {
-    private logger = Logger.getInstance();
-    private dataSource: typeof AppDataSource;
+  private logger = Logger.getInstance();
+  private dataSource: typeof AppDataSource;
 
-    constructor() {
-        this.dataSource = AppDataSource;
-    }
+  constructor() {
+    this.dataSource = AppDataSource;
+  }
 
   private get symptomRepo(): Repository<SymptomCode> {
     return this.dataSource.getRepository(SymptomCode);
@@ -53,7 +49,7 @@ export class ScoringService {
   async scoreSymptoms(
     responseId: string,
     riskLevel: string,
-    symptomCodes: SymptomInput[]
+    symptomCodes: SymptomInput[],
   ): Promise<number> {
     if (!symptomCodes || symptomCodes.length === 0) {
       this.logger.info("No symptom codes to score.");
@@ -76,33 +72,20 @@ export class ScoringService {
 
     // Fetch relevant scoring rules
     const rules = await this.ruleRepo.find({
-      where: [
-        {
-          symptom_code: {
-            id: In(allCodeIds)
-          } ,
-          applies_to_risk: riskLevel,
-          is_active: true,
-        },
-        {
-          symptom_code: {
-            id: In(allCodeIds)
-          } ,
-          applies_to_risk: "ALL",
-          is_active: true,
-        },
-      ],
+      where: {
+        symptom_code: { id: In(allCodeIds) },
+        applies_to_risk: riskLevel as any,
+        is_active: true,
+      },
     });
-
     // Index rules by code_id for quick lookup
-  // Multiple rules can apply to the same code — we multiply them all
+    // Multiple rules can apply to the same code — we multiply them all
     const ruleMap: Record<string, ScoringRule[]> = {};
     rules.forEach((rule) => {
       if (!ruleMap[rule.symptom_code.id]) {
         ruleMap[rule.symptom_code.id] = [];
-      } 
-        ruleMap[rule.symptom_code.id].push(rule);
-
+      }
+      ruleMap[rule.symptom_code.id].push(rule);
     });
 
     //Calculate applied_weight for each symptom and write to RESPONSE_SYMPTOMS
@@ -119,13 +102,13 @@ export class ScoringService {
       const { id, default_weight } = dbRecord;
       const confidence = parseFloat(symptom.confidence.toString());
 
-       // Compound all matching multipliers for this code
+      // Compound all matching multipliers for this code
       let compoundMultiplier = 1.0;
       const appliedRules = ruleMap[id] || [];
       appliedRules.forEach((rule) => {
         compoundMultiplier *= parseFloat(rule.weight_multiplier.toString());
         this.logger.info(
-          `Rule '${rule.rule_name}' * ${rule.weight_multiplier} applied to ${symptom.code}`
+          `Rule '${rule.rule_name}' * ${rule.weight_multiplier} applied to ${symptom.code}`,
         );
       });
 
@@ -135,17 +118,17 @@ export class ScoringService {
 
       responseSymptomRows.push(
         this.responseSymptomRepo.create({
-            symptom_code: {id: id},
-            ai_response: {response_id:responseId},
+          symptom_code: { id: id },
+          ai_response: { response_id: responseId },
           confidence: confidence.toString(),
-          applied_weight: (parseFloat(appliedWeight.toFixed(3))).toString(),
-        })
+          applied_weight: parseFloat(appliedWeight.toFixed(3)).toString(),
+        }),
       );
 
       this.logger.info(
         `${symptom.code}: ${default_weight} × ${compoundMultiplier.toFixed(
-          3
-        )} × ${confidence} = ${appliedWeight.toFixed(3)}`
+          3,
+        )} × ${confidence} = ${appliedWeight.toFixed(3)}`,
       );
     }
 
@@ -162,7 +145,7 @@ export class ScoringService {
    * Returns the dominant symptom for a response
    */
   async getDominantSymptom(
-    responseId: string
+    responseId: string,
   ): Promise<{ code_id: number; code: string; applied_weight: number } | null> {
     const result = await this.responseSymptomRepo
       .createQueryBuilder("rs")
