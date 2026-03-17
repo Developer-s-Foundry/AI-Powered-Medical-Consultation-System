@@ -8,6 +8,7 @@ import {
   EvaluateRiskParams,
   EvaluateRiskResult,
 } from "../../types/types.interface";
+import { SessionStatus, RiskLevel } from "../../types/enum.types";
 import AppDataSource from "../../config/database";
 import { Logger } from "../../config/logger";
 
@@ -111,7 +112,7 @@ export class RiskEvaluatorService {
       advice_shown: adviceShown,
     });
 
-    this.riskEventRepo.save(newRiskEvent);
+    await this.riskEventRepo.save(newRiskEvent);
     // ── Update AI response advice_used
 
     await this.aiResponseRepo.update(
@@ -123,7 +124,7 @@ export class RiskEvaluatorService {
 
     await this.sessionRepo.update(
       { id: sessionId },
-      { final_risk_level: riskLevel },
+      { final_risk_level: riskLevel as RiskLevel },
     );
 
     // ── Handle Escalation (HIGH only)
@@ -139,12 +140,13 @@ export class RiskEvaluatorService {
         notified_at: new Date(),
       });
 
-      await this.escalationRepo.save(newEscalation);
+      const savedEscalation = await this.escalationRepo.save(newEscalation);
+      escalationId = savedEscalation.escalation_id;
 
       // Mark session as escalated
       await this.sessionRepo.update(
         { id: sessionId },
-        { session_status: "ESCALATED" },
+        { session_status: SessionStatus.ESCALATED },
       );
 
       this.logger.info(`🚨 Escalation created: ${escalationId}`);
