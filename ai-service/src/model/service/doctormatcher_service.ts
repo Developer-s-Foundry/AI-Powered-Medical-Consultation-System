@@ -49,7 +49,7 @@ export class DoctorMatcher {
     const timeout = setTimeout(() => controller.abort(), 5000);
     try {
       const response = await fetch(
-        `http://localhost:3007/api/doctors/specialty/${specialty_name}`,
+        `http://localhost:8080/api/v1/doctors/specialty/${specialty_name}`,
         {
           method: "GET",
           headers: {
@@ -123,6 +123,7 @@ export class DoctorMatcher {
 
     // Find available doctor by specialty
     let doctors = await this.getDoctorBySpecialty(preferredSpecialty);
+    console.log("Doctors fetched:", JSON.stringify(doctors, null, 2));
 
     // Fallback to General Practice
     if (!doctors || doctors.length === 0) {
