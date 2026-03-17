@@ -38,4 +38,5 @@ export const authPublicRoutes = [
   "/api/v1/auth/users/register",
   "/api/v1/auth/users/reset-password",
   "/api/v1/auth/users/forgot-password",
+  "/api/v1/profiles/doctors/specialty",
 ];
