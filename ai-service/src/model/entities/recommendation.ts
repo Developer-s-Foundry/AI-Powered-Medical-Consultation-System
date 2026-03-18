@@ -13,8 +13,8 @@ export class Recommendation {
   @PrimaryGeneratedColumn("uuid")
   rec_id!: string;
 
-  @Column()
-  doctor_id!: string;
+  @Column({ type: "text", nullable: true })
+  doctor_id!: string | null;
 
   @Column({ type: "enum", enum: RecommendationType })
   rec_type!: string | null;
@@ -25,8 +25,8 @@ export class Recommendation {
   @CreateDateColumn()
   created_at!: Date;
 
-  @Column()
-  accepted_by_patient!: boolean;
+  @Column({ nullable: true })
+  accepted_by_patient!: boolean | null;
 
   @ManyToOne(() => RiskEvent, (risk_event) => risk_event.recommendation)
   risk_event!: RiskEvent;
