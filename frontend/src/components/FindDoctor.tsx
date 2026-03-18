@@ -47,6 +47,17 @@ export const FindDoctorsPage = () => {
   const [loadingProfile, setLoadingProfile] = useState(false);
 
   useEffect(() => {
+    // Pre-select doctor from AI chat recommendation
+    const stored = localStorage.getItem("selectedDoctor");
+    if (stored) {
+      try {
+        const doc = JSON.parse(stored);
+        setSelectedDoc(doc as DoctorProfile);
+        localStorage.removeItem("selectedDoctor"); // clear after use
+      } catch {
+        // ignore
+      }
+    }
     call(`${EP.DOCTORS_SEARCH}`)
       .then((r) => setDocs(r.data || []))
       .catch(() => setDocs([]));
