@@ -61,15 +61,20 @@ export class DoctorMatcher {
       );
 
       if (!response.ok) {
-        throw new AppError("Doctor service error", response.status);
+        console.error(
+          "Doctor service error:",
+          response.status,
+          await response.text(),
+        );
+        return null;
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log("Doctors fetched:", JSON.stringify(data, null, 2));
+      return data;
     } catch (error: unknown) {
-      if ((error as Error).name === "AbortError") {
-        throw new AppError("Doctor service timeout", 504);
-      }
-      throw error;
+      console.error("Doctor fetch failed:", error);
+      return null;
     } finally {
       clearTimeout(timeout);
     }
