@@ -25,8 +25,8 @@ export class Recommendation {
   @CreateDateColumn()
   created_at!: Date;
 
-  @Column()
-  accepted_by_patient!: boolean;
+  @Column({ type: "boolean", nullable: true, default: null })
+  accepted_by_patient!: boolean | null;
 
   @ManyToOne(() => RiskEvent, (risk_event) => risk_event.recommendation)
   risk_event!: RiskEvent;

@@ -123,7 +123,7 @@ export class DoctorMatcher {
     });
 
     const preferredSpecialty =
-      specialtyMatch?.specialty.name ?? "General Practice";
+      specialtyMatch?.specialty.name ?? "General Practitioner";
     this.logger.info(`Preferred specialty: ${preferredSpecialty}`);
 
     // Find available doctor by specialty
@@ -137,13 +137,19 @@ export class DoctorMatcher {
       }
       doctors = await this.getDoctorBySpecialty("General Practice");
     }
+    if (!doctors || !doctors.data || doctors.data.length === 0) {
+      if (preferredSpecialty !== "General Practitioner") {
+        this.logger.info(`No ${preferredSpecialty} available — falling back`);
+      }
+      doctors = await this.getDoctorBySpecialty("General Practitioner");
+    }
 
-    if (!doctors || doctors.length === 0) {
+    if (!doctors || !doctors.data || doctors.data.length === 0) {
       this.logger.info("No available doctor found — unassigned");
       return null;
     }
 
-    const doctor = doctors[0];
+    const doctor = doctors.data[0];
 
     // Build reason
     const reason = this.buildReason({
@@ -170,10 +176,13 @@ export class DoctorMatcher {
 
     if (!doctor) return null;
     // filter doctor available day
-    const allDays: WeeklySchedule = doctor.consultationSchedule.availableDays;
+    const allDays: WeeklySchedule =
+      doctor.consultationSchedule?.availableDays ?? {};
 
     const doctorAvailableDays = Object.fromEntries(
-      Object.entries(allDays).filter(([_, value]) => value.isAvailable),
+      Object.entries(allDays).filter(
+        ([_, value]) => (value as any).isAvailable,
+      ),
     );
 
     // subsequently, return array of all the doctors

@@ -127,6 +127,19 @@ export default function App() {
     return <AuthPage onLogin={(u: AuthUser) => onLogin(u, navigate)} />;
   }
 
+  function AIChatPageWrapper({ user }: { user: AuthUser }) {
+    const navigate = useNavigate();
+    return (
+      <AIChatPage
+        user={user}
+        onBook={(doc) => {
+          localStorage.setItem("selectedDoctor", JSON.stringify(doc));
+          navigate("/find-doctors");
+        }}
+      />
+    );
+  }
+
   // WRAPPER COMPONENT FOR PROFILE SETUP PAGE
   function ProfileSetupWrapper() {
     const navigate = useNavigate();
@@ -231,7 +244,7 @@ export default function App() {
           element={
             user ? (
               <Shell user={user} notifCount={0} page="ai-chat">
-                <AIChatPage user={user} onBook={() => {}} />
+                <AIChatPageWrapper user={user} />
               </Shell>
             ) : (
               <Navigate to="/login" />
