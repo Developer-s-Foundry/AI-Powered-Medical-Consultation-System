@@ -1,61 +1,42 @@
 import { PaymentService } from "../model/service/payment.service";
-import { Controller, Get, Post, Route, Path, Body, Header} from "tsoa";
+import { Controller, Get, Post, Route, Path, Body, Header } from "tsoa";
 import { PaymentType } from "../types/entity.types";
 import { Payment } from "../model/entities/payment.entity";
 import { AppError } from "../utils/error";
 
-
 @Route("payments")
-export class PaymentController extends Controller { 
-    private paymentService: PaymentService;
+export class PaymentController extends Controller {
+  private paymentService: PaymentService;
 
-    constructor() {
-        super();
-        this.paymentService = new PaymentService();
+  constructor() {
+    super();
+    this.paymentService = new PaymentService();
+  }
+
+  @Post("initiate")
+  public async createPayment(@Body() paymentData: PaymentType): Promise<void> {
+    await this.paymentService.createPayment(paymentData);
+  }
+
+  @Post("verify/:reference")
+  public async verifyPayment(@Path() reference: string): Promise<void> {
+    await this.paymentService.verifyPayment(reference);
+  }
+
+  @Get("{paymentId}")
+  public async getPaymentById(@Path() paymentId: string): Promise<Payment> {
+    const payment = this.paymentService.getPaymentById(paymentId);
+    if (!payment) {
+      throw new AppError("Payment not found", 404);
     }
+    return payment;
+  }
 
-    @Post('initiate')
-    public async createPayment(
-        @Body() paymentData: PaymentType
-    ): Promise<void> {
-        await this.paymentService.createPayment(paymentData);
-    }
-
-     @Post('verify/:reference')
-    public async verifyPayment(
-        @Path() paymentReferenceId: string
-    ): Promise<void> {
-        await this.paymentService.verifyPayment(paymentReferenceId);
-    }
-
-    @Get("{paymentId}")
-    public async getPaymentById(
-        @Path() paymentId: string
-    ): Promise<Payment> {
-        const payment = this.paymentService.getPaymentById(paymentId);
-        if (!payment) {
-            throw new AppError("Payment not found", 404); 
-        }
-        return payment;
-    }
-
-    @Post("/webhook/paystack")
-    public async handlePaystackWebhook(
-        @Header("x-paystack-signature") signature: string,
-        @Body() webhookData: any
-    ): Promise<void> {
-        await this.paymentService.handlePaystackWebhook(signature, webhookData);
-    }
-
-    
+  @Post("/webhook/paystack")
+  public async handlePaystackWebhook(
+    @Header("x-paystack-signature") signature: string,
+    @Body() webhookData: any,
+  ): Promise<void> {
+    await this.paymentService.handlePaystackWebhook(signature, webhookData);
+  }
 }
-        
-
-
-
-
-
-
-
-
-

@@ -73,6 +73,11 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
     .filter((p) => p.status === "pending")
     .reduce((sum, p) => sum + Number(p.amount), 0);
 
+  const fee = pending?.consultationFee || doctor?.fee || 0;
+  const doctorName =
+    pending?.doctorName ||
+    (doctor ? `${doctor.first_name} ${doctor.last_name}` : "Doctor");
+
   const pay = async () => {
     setProcessing(true);
     setErr("");
@@ -81,7 +86,7 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
       const res = await call(EP.PAYMENT_INITIATE, "POST", {
         patientId: user.id,
         doctor_id: doctor?.doctor_id,
-        amount: doctor?.fee,
+        amount: fee,
         provider_name: "paystack",
       });
 
@@ -109,7 +114,7 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
                 navigate("/payment/success", {
                   state: {
                     reference: transaction.reference,
-                    amount: doctor?.fee,
+                    amount: fee,
                     paidAt: new Date().toISOString(),
                   },
                 });
@@ -230,11 +235,11 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
           )}
         </Card>
 
-        {/* Pending Payment */}
-        {pending ? (
+        {/* Pending Payment or Doctor from context */}
+        {pending || doctor ? (
           <Card>
             <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 10 }}>
-              Pending Payment
+              {pending ? "Pending Payment" : "Book Appointment"}
             </div>
             <div
               style={{
@@ -244,16 +249,21 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
                 marginBottom: 10,
               }}
             >
-              <Av name={pending.doctorName || "Doctor"} size={36} />
+              <Av name={doctorName} size={36} />
               <div>
                 <div style={{ fontWeight: 600, fontSize: 13 }}>
-                  {pending.doctorName
-                    ? `Dr. ${pending.doctorName}`
-                    : "Consultation"}
+                  Dr. {doctorName}
                 </div>
-                <div style={{ fontSize: 12, color: C.m }}>
-                  {pending.date} {pending.time ? `· ${pending.time}` : ""}
-                </div>
+                {pending?.date && (
+                  <div style={{ fontSize: 12, color: C.m }}>
+                    {pending.date} {pending.time ? `· ${pending.time}` : ""}
+                  </div>
+                )}
+                {doctor?.specialty && (
+                  <div style={{ fontSize: 12, color: C.m }}>
+                    {doctor.specialty}
+                  </div>
+                )}
               </div>
             </div>
             <div
@@ -264,10 +274,8 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
                 marginBottom: 12,
               }}
             >
-              <span style={{ color: C.m }}>consultationFee</span>
-              <strong>
-                ₦{Number(pending.consultationFee || 0).toLocaleString()}
-              </strong>
+              <span style={{ color: C.m }}>Consultation Fee</span>
+              <strong>₦{Number(fee).toLocaleString()}</strong>
             </div>
             <Btn full onClick={() => setModal(true)}>
               Pay Now
@@ -340,16 +348,16 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
                 marginBottom: 16,
               }}
             >
-              <Av name={pending?.doctorName || "Doctor"} size={40} />
+              <Av name={doctorName} size={40} />
               <div>
                 <div style={{ fontWeight: 600, fontSize: 13 }}>
-                  {pending?.doctorName
-                    ? `Dr. ${pending.doctorName}`
-                    : "Consultation"}
+                  Dr. {doctorName}
                 </div>
-                <div style={{ fontSize: 12, color: C.m }}>
-                  {pending?.date} {pending?.time ? `· ${pending.time}` : ""}
-                </div>
+                {pending?.date && (
+                  <div style={{ fontSize: 12, color: C.m }}>
+                    {pending.date} {pending.time ? `· ${pending.time}` : ""}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -366,7 +374,7 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
             >
               <span style={{ color: C.m }}>Consultation Fee</span>
               <strong style={{ color: C.g }}>
-                ₦{Number(pending?.consultationFee || 0).toLocaleString()}
+                ₦{Number(fee).toLocaleString()}
               </strong>
             </div>
 
@@ -385,11 +393,7 @@ export const PaymentsPage = ({ user }: PaymentsPageProps) => {
             {err && <Alrt>{err}</Alrt>}
 
             <Btn full sz="lg" onClick={pay} disabled={processing}>
-              {processing ? (
-                <Spin />
-              ) : (
-                `Pay ₦${Number(pending?.consultationFee || 0).toLocaleString()}`
-              )}
+              {processing ? <Spin /> : `Pay ₦${Number(fee).toLocaleString()}`}
             </Btn>
           </Card>
         </div>
