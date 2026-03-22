@@ -1,0 +1,6 @@
+CREATE DATABASE auth_db;
+CREATE DATABASE profiles_db;
+CREATE DATABASE drugs_db;
+CREATE DATABASE payments_db;
+CREATE DATABASE notifications_db;
+CREATE DATABASE ai_db;
