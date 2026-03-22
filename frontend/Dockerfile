@@ -3,8 +3,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-ARG VITE_GATEWAY_URL
-ENV VITE_GATEWAY_URL=$VITE_GATEWAY_URL
+ENV VITE_GATEWAY_URL=https://healthbridge-api-gateway.onrender.com
 RUN npm run build
 
 FROM nginx:alpine

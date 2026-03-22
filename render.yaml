@@ -7,8 +7,6 @@ services:
     runtime: docker
     dockerfilePath: ./frontend/Dockerfile
     dockerContext: ./frontend
-    buildArgs:
-      VITE_GATEWAY_URL: https://healthbridge-api-gateway.onrender.com
     envVars:
       - key: VITE_GATEWAY_URL
         value: https://healthbridge-api-gateway.onrender.com
