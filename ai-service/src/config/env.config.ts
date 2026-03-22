@@ -22,7 +22,7 @@ export const config = {
   ROUTINGKEY: getenv(environment_variables.AUTH_ROUTING_KEY),
   DEFAULTUSER: getenv(environment_variables.RABBITMQ_DEFAULT_USER),
   DEFAULTPASS: getenv(environment_variables.RABBITMQ_DEFAULT_PASS),
-  SERVER_PORT: parseInt(getenv(environment_variables.SERVER_PORT)),
+  PORT: parseInt(getenv(environment_variables.SERVER_PORT)),
   NODE_ENV: getenv(environment_variables.NODE_ENV),
   AUTH_JWT_SECRET: getenv(environment_variables.AUTH_JWT_SECRET),
   GATEWAY_SECRET_KEY: getenv(environment_variables.GATEWAY_SECRET_KEY),
