@@ -1,0 +1,314 @@
+services:
+  # ─────────────────────────────────────────
+  # FRONTEND
+  # ─────────────────────────────────────────
+  - type: web
+    name: healthbridge-frontend
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    buildArgs:
+      VITE_GATEWAY_URL: https://healthbridge-api-gateway.onrender.com
+    envVars:
+      - key: VITE_GATEWAY_URL
+        value: https://healthbridge-api-gateway.onrender.com
+
+  # ─────────────────────────────────────────
+  # API GATEWAY
+  # ─────────────────────────────────────────
+  - type: web
+    name: healthbridge-api-gateway
+    runtime: docker
+    dockerfilePath: ./api-gateway/Dockerfile
+    dockerContext: ./api-gateway
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GATEWAY_SECRET
+        sync: false
+      - key: AUTH_JWT_SECRET
+        sync: false
+      - key: AUTH_SERVICE_URL
+        value: https://healthbridge-auth-service.onrender.com
+      - key: PROFILE_SERVICE_URL
+        value: https://healthbridge-profile-service.onrender.com
+      - key: DRUG_SERVICE_URL
+        value: https://healthbridge-drug-service.onrender.com
+      - key: PAYMENT_SERVICE_URL
+        value: https://healthbridge-payment-service.onrender.com
+      - key: AI_SERVICE_URL
+        value: https://healthbridge-ai-service.onrender.com
+      - key: NOTIFICATION_SERVICE_URL
+        value: https://healthbridge-notification-service.onrender.com
+
+  # ─────────────────────────────────────────
+  # AUTH SERVICE
+  # ─────────────────────────────────────────
+  - type: web
+    name: healthbridge-auth-service
+    runtime: docker
+    dockerfilePath: ./auth-service/Dockerfile
+    dockerContext: ./auth-service
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_HOST
+        fromDatabase:
+          name: healthbridge-auth-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: healthbridge-auth-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: healthbridge-auth-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: healthbridge-auth-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: healthbridge-auth-db
+          property: password
+      - key: AUTH_JWT_SECRET
+        sync: false
+      - key: GATEWAY_SECRET
+        sync: false
+      - key: RABBITMQ_URL
+        sync: false
+      - key: RABBITMQ_DEFAULT_USER
+        sync: false
+      - key: RABBITMQ_DEFAULT_PASS
+        sync: false
+
+  # ─────────────────────────────────────────
+  # USERS PROFILE SERVICE
+  # ─────────────────────────────────────────
+  - type: web
+    name: healthbridge-profile-service
+    runtime: docker
+    dockerfilePath: ./users-profile-service/Dockerfile
+    dockerContext: ./users-profile-service
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_HOST
+        fromDatabase:
+          name: healthbridge-profiles-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: healthbridge-profiles-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: healthbridge-profiles-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: healthbridge-profiles-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: healthbridge-profiles-db
+          property: password
+      - key: AUTH_JWT_SECRET
+        sync: false
+      - key: GATEWAY_SECRET
+        sync: false
+      - key: RABBITMQ_URL
+        sync: false
+
+  # ─────────────────────────────────────────
+  # DRUG SERVICE
+  # ─────────────────────────────────────────
+  - type: web
+    name: healthbridge-drug-service
+    runtime: docker
+    dockerfilePath: ./drug-service/Dockerfile
+    dockerContext: ./drug-service
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: healthbridge-drugs-db
+          property: connectionString
+      - key: AUTH_JWT_SECRET
+        sync: false
+      - key: GATEWAY_SECRET
+        sync: false
+      - key: RABBITMQ_URL
+        sync: false
+      - key: RABBITMQ_EXCHANGE
+        value: health-bridge-events
+
+  # ─────────────────────────────────────────
+  # PAYMENT SERVICE
+  # ─────────────────────────────────────────
+  - type: web
+    name: healthbridge-payment-service
+    runtime: docker
+    dockerfilePath: ./payment-service/Dockerfile
+    dockerContext: ./payment-service
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_HOST
+        fromDatabase:
+          name: healthbridge-payments-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: healthbridge-payments-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: healthbridge-payments-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: healthbridge-payments-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: healthbridge-payments-db
+          property: password
+      - key: AUTH_JWT_SECRET
+        sync: false
+      - key: GATEWAY_SECRET
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: RABBITMQ_URL
+        sync: false
+
+  # ─────────────────────────────────────────
+  # AI SERVICE
+  # ─────────────────────────────────────────
+  - type: web
+    name: healthbridge-ai-service
+    runtime: docker
+    dockerfilePath: ./ai-service/Dockerfile
+    dockerContext: ./ai-service
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_HOST
+        fromDatabase:
+          name: healthbridge-ai-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: healthbridge-ai-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: healthbridge-ai-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: healthbridge-ai-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: healthbridge-ai-db
+          property: password
+      - key: AUTH_JWT_SECRET
+        sync: false
+      - key: GATEWAY_SECRET_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_API_URL
+        sync: false
+      - key: RABBITMQ_URL
+        sync: false
+      - key: RABBITMQ_EXCHANGE
+        value: health-bridge-events
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: PAYSTACK_BASE_URL
+        value: https://api.paystack.co
+
+  # ─────────────────────────────────────────
+  # NOTIFICATION SERVICE
+  # ─────────────────────────────────────────
+  - type: web
+    name: healthbridge-notification-service
+    runtime: docker
+    dockerfilePath: ./notification-service/Dockerfile
+    dockerContext: ./notification-service
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_HOST
+        fromDatabase:
+          name: healthbridge-notifications-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: healthbridge-notifications-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: healthbridge-notifications-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: healthbridge-notifications-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: healthbridge-notifications-db
+          property: password
+      - key: AUTH_JWT_SECRET
+        sync: false
+      - key: GATEWAY_SECRET
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: RABBITMQ_URL
+        sync: false
+
+# ─────────────────────────────────────────
+# DATABASES (Render PostgreSQL)
+# ─────────────────────────────────────────
+databases:
+  - name: healthbridge-auth-db
+    databaseName: auth_db
+    user: auth_user
+    plan: free
+
+  - name: healthbridge-profiles-db
+    databaseName: profiles_db
+    user: profiles_user
+    plan: free
+
+  - name: healthbridge-drugs-db
+    databaseName: drugs_db
+    user: drugs_user
+    plan: free
+
+  - name: healthbridge-payments-db
+    databaseName: payments_db
+    user: payments_user
+    plan: free
+
+  - name: healthbridge-notifications-db
+    databaseName: notifications_db
+    user: notifications_user
+    plan: free
+
+  - name: healthbridge-ai-db
+    databaseName: ai_db
+    user: ai_user
+    plan: free
