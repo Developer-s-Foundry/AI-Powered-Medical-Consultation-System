@@ -34,7 +34,7 @@ COPY --from=builder /app/dist ./dist
 RUN mkdir -p logs
 
 # Expose port
-EXPOSE 3002
+EXPOSE 2012
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
