@@ -9,7 +9,7 @@ import { initializeSocket } from "./config/socket";
 
 (async () => {
   const logger = Logger.getInstance();
-  const port = process.env.PORT || process.env.PORT || 3001;
+  const port = process.env.PORT || process.env.SERVER_PORT || 3001;
 
   const app = express();
   const server = http.createServer(app);
