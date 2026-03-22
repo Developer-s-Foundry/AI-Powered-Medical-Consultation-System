@@ -1,0 +1,34 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.payment_status = exports.environment_variables = void 0;
+var environment_variables;
+(function (environment_variables) {
+    environment_variables["DB_HOST"] = "DB_HOST";
+    environment_variables["DB_PORT"] = "DB_PORT";
+    environment_variables["DB_USERNAME"] = "DB_USERNAME";
+    environment_variables["DB_PASSWORD"] = "DB_PASSWORD";
+    environment_variables["DB_NAME"] = "DB_NAME";
+    environment_variables["RABBITMQ_URL"] = "RABBITMQ_URL";
+    environment_variables["RABBITMQ_EXCHANGE"] = "RABBITMQ_EXCHANGE";
+    environment_variables["AUTH_ROUTING_KEY"] = "AUTH_ROUTING_KEY";
+    environment_variables["RABBITMQ_DEFAULT_USER"] = "RABBITMQ_DEFAULT_USER";
+    environment_variables["RABBITMQ_DEFAULT_PASS"] = "RABBITMQ_DEFAULT_PASS";
+    environment_variables["FRONTEND_URL"] = "FRONTEND_URL";
+    environment_variables["SERVER_PORT"] = "SERVER_PORT";
+    environment_variables["NODE_ENV"] = "NODE_ENV";
+    environment_variables["AUTH_JWT_SECRET"] = "AUTH_JWT_SECRET";
+    environment_variables["GATEWAY_SECRET_KEY"] = "GATEWAY_SECRET_KEY";
+    environment_variables["PAYSTACK_SECRET_KEY"] = "PAYSTACK_SECRET_KEY";
+    environment_variables["PAYSTACK_BASE_URL"] = "PAYSTACK_BASE_URL";
+    environment_variables["REDIS_HOST"] = "REDIS_HOST";
+    environment_variables["REDIS_PORT"] = "REDIS_PORT";
+    environment_variables["REDIS_PASSWORD"] = "REDIS_PASSWORD";
+    environment_variables["REDIS_DB"] = "REDIS_DB";
+})(environment_variables || (exports.environment_variables = environment_variables = {}));
+var payment_status;
+(function (payment_status) {
+    payment_status["PENDING"] = "pending";
+    payment_status["COMPLETED"] = "completed";
+    payment_status["FAILED"] = "failed";
+    payment_status["REFUNDED"] = "refunded";
+})(payment_status || (exports.payment_status = payment_status = {}));

@@ -156,7 +156,7 @@ export class PaymentService {
             // send payment success event to notification service and ai service(to create appointment)
             await this.producer.sendToQueue(EventType.PAYMENT_SUCCESS, {
                     transactionId: transaction.id,
-                    bookingId: payment.booking_id,
+                    appointmentId: payment.appointment_id,
                     patientId: payment.patient_id,
                     patientEmail: payment.patient_email,
                     amount: payment.amount,
@@ -165,7 +165,7 @@ export class PaymentService {
                     paymentDate: payment.createdAt
              })
              await this.producer.sendToQueue(EventType.CREATE_APPOINTMENT, {
-                    bookingId: payment.booking_id,
+                    appointmentId: payment.appointment_id,
                     patientId: payment.patient_id,
              })
             
@@ -173,7 +173,7 @@ export class PaymentService {
             // send payment success event to notification service
             await this.producer.sendToQueue(EventType.PAYMENT_FAILED, {
                     transactionId: transaction.id,
-                    bookingId: payment.booking_id,
+                    appointmentId: payment.appointment_id,
                     patientId: payment.patient_id,
                     patientEmail: payment.patient_email,
                     amount: payment.amount,
